@@ -245,7 +245,7 @@ def build_parser() -> argparse.ArgumentParser:
     cameras.add_argument("--fps", type=float, default=21.0)
     cameras.add_argument("--fisheye-fov", type=float, default=210.0)
     cameras.add_argument("--checkerboard", type=_size, default=(9, 6))
-    cameras.add_argument("--square-size", type=float, default=18.0)
+    cameras.add_argument("--square-size", type=float, default=25.0)
     cameras.add_argument("--target-samples", type=int, default=30)
     cameras.add_argument("--coverage-target", type=float, default=0.8)
     cameras.set_defaults(handler=command_calibrate_cameras)

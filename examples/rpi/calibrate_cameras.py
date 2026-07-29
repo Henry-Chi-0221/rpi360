@@ -20,7 +20,7 @@ def main() -> None:
         default=210.0,
         help="usable circular lens field of view in degrees",
     )
-    parser.add_argument("--square-size", type=float, default=18.0)
+    parser.add_argument("--square-size", type=float, default=25.0)
     args = parser.parse_args()
 
     session = IntrinsicCalibrationSession(

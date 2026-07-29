@@ -134,7 +134,7 @@ The validated camera uses:
   back-to-back camera enclosure.
 - M2 heat-set inserts, 2 mm long, with M2 x 4 mm screws for the camera boards.
 - M3 heat-set inserts, 3 mm long, with M3 x 6 mm screws for the enclosure.
-- MicroSD storage and two Pi 5-compatible camera cables.
+- MicroSD storage.
 - A dedicated enclosure opening measured for Henry Chi's existing phone power
   bank. Other power-bank dimensions do not fit this one-off mount.
 - A reliable 5 V / 5 A supply; the
@@ -194,8 +194,9 @@ valid while that particular printed rig remains mechanically unchanged.
 
 Print
 [`hardware/calibration/checkerboard-9x6-a4.pdf`](hardware/calibration/checkerboard-9x6-a4.pdf)
-at **100% / Actual Size**. Disable page fitting and verify the 100 mm reference
-line.
+at **100% / Actual Size** in A4 landscape mode with page fitting disabled. It is
+the pure 9 x 6 inner-corner checkerboard geometry published by OpenCV: 10 x 7
+squares at 25 mm each. Four adjacent squares must measure exactly 100 mm.
 
 Run:
 

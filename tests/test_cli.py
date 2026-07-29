@@ -52,6 +52,7 @@ class CLITests(unittest.TestCase):
         )
         self.assertEqual(rig.calibration, cameras.calibration)
         self.assertEqual(cameras.fisheye_fov, 210.0)
+        self.assertEqual(cameras.square_size, 25.0)
         self.assertIsNone(rig.equirectangular_size)
         self.assertEqual(rig.ransac_threshold, 0.4)
         self.assertEqual(rig.maximum_reprojection_error, 8.0)

@@ -15,7 +15,6 @@ The documented unit does not use an active-cooling assembly.
 | --- | --- | --- |
 | Computer | Raspberry Pi 5, 8 GB | Camera control, calibration, and recording |
 | Cameras | 2 x [Arducam B0287 Sony IMX219 wide-angle modules](https://www.arducam.com/arducam-imx219-wide-angle-camera-module-for-nvidia-jetson-raspberry-pi-compute-module-4-3-3-b0287.html) | Back-to-back fisheye capture |
-| Camera cables | 2 x Pi 5-compatible CAM/DISP ribbon cables | Connect both IMX219 modules |
 | Printed enclosure | [`top-half.stl`](cad/top-half.stl) and [`bottom-half.stl`](cad/bottom-half.stl) | Rigid optical and electronics mount |
 | Camera inserts | M2 heat-set inserts, 2 mm long | Captive threads for camera PCB mounting |
 | Camera screws | M2 x 4 mm | Fasten camera PCBs to the printed mounts |
@@ -135,8 +134,8 @@ records the logical camera mapping as MP4 track IDs 1 and 2.
 ## Printable calibration board
 
 Print [`checkerboard-9x6-a4.pdf`](calibration/checkerboard-9x6-a4.pdf) at
-**100% / Actual Size** with page fitting disabled. Confirm that its reference
-line measures exactly 100 mm. The pattern has 9 x 6 inner corners and 18 mm
-squares.
+**100% / Actual Size** in A4 landscape mode with page fitting disabled. The
+OpenCV-style pure grid has 9 x 6 inner corners and 25 mm squares. Confirm that
+four adjacent squares measure exactly 100 mm.
 
 Mount it to a flat surface. A warped sheet produces biased intrinsics.
