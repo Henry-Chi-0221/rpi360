@@ -349,9 +349,12 @@ with Player.mp4("capture.r360.mp4", paced=False) as player:
         inspect(frame.equi_blended)
 ```
 
-All arrays are independent, read-only `uint8` BGR snapshots. Pass frames to
-worker threads or service queues; keep the `Player` itself on one consumer
-thread.
+All arrays are independent, read-only `uint8` BGR snapshots. MP4 playback
+decodes `camera0` and `camera1` at the calibration dimensions by default so
+live and recorded processing follow the same K/D geometry efficiently. Pass
+`decode_size="native"` to `Player.mp4()` when an integration specifically needs
+the full encoded track dimensions. Pass frames to worker threads or service
+queues; keep the `Player` itself on one consumer thread.
 
 See [the API guide](docs/api.md) and
 [`examples/playback/process_frames.py`](examples/playback/process_frames.py).
@@ -371,7 +374,8 @@ does not expose a general export pipeline.
 
 ## What each image means
 
-- `camera0`, `camera1`: original decoded fisheye tracks.
+- `camera0`, `camera1`: decoded fisheye tracks (calibration size by default;
+  native encoded size with `decode_size="native"`).
 - `equi_1`, `equi_2`: each camera independently mapped using its K/D/FOV.
 - `equi_blended`: fixed stitched panorama after rig rotation and seam blending.
 - `equirectangular`: an orientation-adjustable presentation of that panorama.

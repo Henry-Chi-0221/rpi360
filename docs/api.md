@@ -17,6 +17,11 @@ with Player.mp4("capture.r360.mp4") as player:
 MP4 players additionally support `seek()`, `seek_by()`, `step()`, `restart()`,
 `speed`, `duration`, `timeline`, and PTS-aware pacing.
 
+The default `decode_size="calibration"` returns `camera0` and `camera1` at the
+dimensions associated with their K/D matrices. Use
+`Player.mp4("capture.r360.mp4", decode_size="native")` only when the full
+encoded track dimensions are required.
+
 ## Live
 
 ```python
