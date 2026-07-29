@@ -17,6 +17,7 @@ import numpy as np
 
 from ...common.metadata import load_calibration_document
 from ...common.types import (
+    CalibrationError,
     CalibrationProfile,
     DualCameraIntrinsics,
     InvalidStateError,
@@ -384,7 +385,7 @@ class VideoRigCalibrationSession:
 
     def _step_solve(self) -> CalibrationEvent:
         if len(self._samples) < 2:
-            raise RuntimeError(
+            raise CalibrationError(
                 "at least two quality-approved video samples are required"
             )
         started = time.perf_counter()

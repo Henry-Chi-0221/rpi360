@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 
 from rpi360 import (
+    CalibrationError,
     DualCameraIntrinsics,
     IntrinsicCalibrationSession,
     RigCalibrationWorkflow,
@@ -46,6 +47,15 @@ from rpi360.rpi.calibration.opencv import _fitted_window_size
 
 
 class CalibrationTests(unittest.TestCase):
+    def test_video_solver_reports_quality_rejection_as_domain_error(self):
+        session = object.__new__(VideoRigCalibrationSession)
+        session._samples = []
+        with self.assertRaisesRegex(
+            CalibrationError,
+            "at least two quality-approved video samples",
+        ):
+            session._step_solve()
+
     def test_workflow_resume_solves_without_reopening_cameras(self):
         intrinsics = self._sample_intrinsics()
         config = InteractiveRigConfig(

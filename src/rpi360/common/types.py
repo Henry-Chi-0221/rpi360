@@ -51,6 +51,10 @@ class CaptureError(R360Error):
     """Raised when a live camera source stops unexpectedly."""
 
 
+class CalibrationError(R360Error):
+    """Raised when captured samples cannot produce a valid calibration."""
+
+
 class OperationCancelled(R360Error):
     """Raised when a long-running operation is explicitly cancelled."""
 

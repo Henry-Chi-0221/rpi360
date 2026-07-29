@@ -3,6 +3,7 @@
 from .common.frames import FrameBundle, PlayerFrame, View, ViewSnapshot
 from .common.player import Player
 from .common.types import (
+    CalibrationError,
     CalibrationProfile,
     CameraCalibration,
     CaptureError,
@@ -33,6 +34,7 @@ from .visuals import projection_grid
 
 __all__ = [
     "CalibrationEvent",
+    "CalibrationError",
     "CalibrationProfile",
     "CameraCalibration",
     "CaptureError",
