@@ -1,0 +1,22 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Local captures and calibration work. Curated samples under assets/ are tracked.
+*.h264
+*.tmp
+*.partial
+capture*.mp4
+recording*.mp4
+calibration-result.json
+rig-calibration-work/
+local_data/

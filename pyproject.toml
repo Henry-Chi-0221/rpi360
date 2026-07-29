@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpi360"
+version = "1.0.0"
+description = "Dual-fisheye calibration, recording, and controllable 360-degree playback"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [{name = "Henry Chi"}]
+keywords = ["raspberry-pi", "360-camera", "fisheye", "opencv", "picamera2"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = ["numpy>=1.21"]
+
+[project.optional-dependencies]
+desktop = ["opencv-python>=4.5"]
+showcase = ["Pillow>=8.3"]
+dev = [
+  "opencv-python>=4.5",
+  "Pillow>=8.3",
+  "pytest>=7",
+  "pytest-cov>=4",
+  "ruff>=0.8",
+]
+
+[project.scripts]
+rpi360 = "rpi360.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Henry-Chi-0221/rpi360"
+Repository = "https://github.com/Henry-Chi-0221/rpi360"
+Issues = "https://github.com/Henry-Chi-0221/rpi360/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/rpi360/rpi/calibration/_internals.py" = ["B904", "E501", "I001"]
