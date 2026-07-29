@@ -10,11 +10,11 @@ rpicam-hello --list-cameras
 
 - Both IMX219 cameras appear and their logical order is correct.
 - The recording destination has enough free storage.
-- The camera cables and the custom power-bank mount cannot shift the lenses.
+- The enclosure hardware and custom power-bank mount cannot shift the lenses.
 
 ## Calibration
 
-- Print scale verified against the 100 mm reference line.
+- Print scale verified by measuring four adjacent 25 mm squares as 100 mm.
 - Intrinsic UI completes camera 0 and camera 1.
 - The resulting JSON is `intrinsics_complete` with no rig rotation.
 - Rig capture records 30 seconds without camera errors.

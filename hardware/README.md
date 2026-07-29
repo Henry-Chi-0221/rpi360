@@ -3,9 +3,8 @@
 ![Assembled RPI360 rig on a tripod](../assets/hardware/assembled-on-tripod.jpg)
 
 This is the physical enclosure used to validate RPI360 on a Raspberry Pi 5.
-The lenses are held back-to-back, the Pi and both camera cables are contained
-inside the printed body, and an external slot holds one specific phone power
-bank.
+The lenses are held back-to-back, the Pi is contained inside the printed body,
+and an external slot holds one specific phone power bank.
 
 The documented unit does not use an active-cooling assembly.
 
