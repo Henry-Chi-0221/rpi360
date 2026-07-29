@@ -145,6 +145,7 @@ def sampled_frames(
         paced=False,
         size=FULL_HD,
         panorama_size=PANORAMA_SIZE,
+        decode_size="native",
         quality="fast",
     ) as player:
         first_timestamp = None
@@ -324,6 +325,7 @@ def write_projection_grid(input_path: Path, output_path: Path) -> None:
         input_path,
         paced=False,
         panorama_size=PANORAMA_SIZE,
+        decode_size="native",
         quality="fast",
     ) as player:
         frame = player.next(timeout=None)

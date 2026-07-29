@@ -34,7 +34,7 @@ def main() -> None:
     ) as player:
         run_viewer(
             player,
-            title="RPI360 {}".format(args.aspect_ratio),
+            window="RPI360 {}".format(args.aspect_ratio),
         )
 
 

@@ -1,6 +1,8 @@
 import runpy
+import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 class ExampleImportTests(unittest.TestCase):
@@ -19,6 +21,43 @@ class ExampleImportTests(unittest.TestCase):
         self.assertIn("RigCalibrationWorkflow", namespace)
         self.assertNotIn("RigCalibrationSession", namespace)
         self.assertNotIn("RigVideoRecorder", namespace)
+
+    def test_aspect_ratio_example_uses_public_viewer_arguments(self):
+        root = Path(__file__).resolve().parents[1]
+        namespace = runpy.run_path(
+            str(root / "examples/playback/aspect_ratios.py"),
+            run_name="rpi360_example",
+        )
+        calls = []
+
+        class FakePlayer:
+            @classmethod
+            def mp4(cls, *args, **kwargs):
+                del cls
+
+                class Context:
+                    def __enter__(self):
+                        return "player"
+
+                    def __exit__(self, *exc):
+                        return False
+
+                calls.append(("mp4", args, kwargs))
+                return Context()
+
+        def fake_viewer(player, **kwargs):
+            calls.append(("viewer", player, kwargs))
+
+        namespace["main"].__globals__["Player"] = FakePlayer
+        namespace["main"].__globals__["run_viewer"] = fake_viewer
+        with mock.patch.object(
+            sys,
+            "argv",
+            ["aspect_ratios.py", "input.mp4", "--aspect-ratio", "9:16"],
+        ):
+            namespace["main"]()
+
+        self.assertEqual(calls[-1], ("viewer", "player", {"window": "RPI360 9:16"}))
 
 
 if __name__ == "__main__":
