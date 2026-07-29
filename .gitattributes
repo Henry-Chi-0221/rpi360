@@ -2,4 +2,6 @@
 *.webp binary
 *.png binary
 *.jpeg binary
+*.jpg binary
 *.pdf binary
+*.stl binary

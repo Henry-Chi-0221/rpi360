@@ -124,11 +124,16 @@ python examples/playback/aspect_ratios.py assets/samples/lake.r360.mp4 --aspect-
 
 ## Hardware
 
+![Assembled dual-fisheye rig on a tripod](assets/hardware/assembled-on-tripod.jpg)
+
 The validated camera uses:
 
 - Raspberry Pi 5, 8 GB RAM.
 - 2 x [Arducam B0287 Sony IMX219 wide-angle camera modules](https://www.arducam.com/arducam-imx219-wide-angle-camera-module-for-nvidia-jetson-raspberry-pi-compute-module-4-3-3-b0287.html).
-- A rigid custom 3D-printed back-to-back camera frame.
+- The included `top-half.stl` and `bottom-half.stl` printed as a rigid,
+  back-to-back camera enclosure.
+- M2 heat-set inserts, 2 mm long, with M2 x 4 mm screws for the camera boards.
+- M3 heat-set inserts, 3 mm long, with M3 x 6 mm screws for the enclosure.
 - MicroSD storage and two Pi 5-compatible camera cables.
 - A dedicated enclosure opening measured for Henry Chi's existing phone power
   bank. Other power-bank dimensions do not fit this one-off mount.
@@ -136,16 +141,16 @@ The validated camera uses:
   [official 27 W supply](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#power-supply)
   is the safe reference.
 
-The enclosure opening is not a general power-bank standard. Any future CAD
-release must identify the exact device and measured dimensions it was designed
-around.
+The enclosure opening is not a general power-bank standard. The included CAD
+targets the exact device used in this build; adapting another power bank
+requires measuring it and modifying the model.
 
 Use a local display or graphical desktop for the interactive OpenCV calibration
 windows. Plain SSH without display forwarding cannot show them.
 
 See [the complete hardware and mounting guide](hardware/README.md). The custom
-CAD folder is reserved but intentionally empty until the original model files
-are published.
+CAD folder now includes both printable STL halves. Verify the documented model
+dimensions and heat-set insert fit before printing the final parts.
 
 ## Raspberry Pi setup
 
@@ -414,4 +419,5 @@ decode, and 2048 x 1024 panorama. Higher values trade latency for detail.
 - [Contributing](CONTRIBUTING.md)
 
 Code is licensed under the [MIT License](LICENSE). Curated media is licensed
-under [CC BY 4.0](LICENSE-MEDIA), copyright 2026 Henry Chi.
+under [CC BY 4.0](LICENSE-MEDIA), and the printable enclosure is licensed under
+[CERN-OHL-P-2.0](hardware/cad/LICENSE). Copyright 2026 Henry Chi.

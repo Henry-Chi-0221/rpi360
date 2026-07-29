@@ -1,4 +1,5 @@
 import json
+import struct
 import unittest
 from pathlib import Path
 
@@ -116,6 +117,54 @@ class PublicAssetTests(unittest.TestCase):
         self.assertTrue(
             (self.root / "hardware/calibration/checkerboard-9x6-a4.pdf").is_file()
         )
+
+    def test_hardware_photos_and_printable_stls_are_valid(self):
+        hardware_assets = self.root / "assets/hardware"
+        expected_images = (
+            "assembled-on-tripod.jpg",
+            "cad-overview.png",
+            "camera-face.jpg",
+            "enclosure-mount.jpg",
+            "open-enclosure.jpg",
+            "power-bank-fit.jpg",
+            "rig-side.jpg",
+        )
+        for name in expected_images:
+            path = hardware_assets / name
+            self.assertTrue(path.is_file(), name)
+            self.assertGreater(path.stat().st_size, 10_000)
+
+        expected_extents = {
+            "top-half.stl": (60.0, 113.8, 5.0),
+            "bottom-half.stl": (60.0, 113.8, 41.0),
+        }
+        cad_directory = self.root / "hardware/cad"
+        license_text = (cad_directory / "LICENSE").read_text(encoding="utf-8")
+        notice_text = (cad_directory / "NOTICE").read_text(encoding="utf-8")
+        self.assertIn(
+            "CERN Open Hardware Licence Version 2 - Permissive",
+            license_text,
+        )
+        self.assertIn("Copyright (c) 2026 Henry Chi", notice_text)
+        for name, expected in expected_extents.items():
+            data = (cad_directory / name).read_bytes()
+            triangle_count = struct.unpack_from("<I", data, 80)[0]
+            self.assertEqual(len(data), 84 + triangle_count * 50)
+            minimum = [float("inf")] * 3
+            maximum = [float("-inf")] * 3
+            for index in range(triangle_count):
+                values = struct.unpack_from("<12fH", data, 84 + index * 50)
+                for vertex in range(3):
+                    for axis, value in enumerate(
+                        values[3 + vertex * 3 : 6 + vertex * 3]
+                    ):
+                        minimum[axis] = min(minimum[axis], value)
+                        maximum[axis] = max(maximum[axis], value)
+            actual = tuple(
+                round(high - low, 1)
+                for low, high in zip(minimum, maximum)
+            )
+            self.assertEqual(actual, expected)
 
 
 if __name__ == "__main__":

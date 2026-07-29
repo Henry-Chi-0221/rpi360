@@ -1,0 +1,15 @@
+RPI360 Dual-Fisheye Camera Enclosure
+Copyright (c) 2026 Henry Chi
+
+This source describes Open Hardware and is licensed under the CERN Open
+Hardware Licence Version 2 - Permissive (CERN-OHL-P-2.0).
+
+The Covered Source consists of:
+
+- top-half.stl
+- bottom-half.stl
+
+The design is provided without certification or warranty. The power-bank
+opening is specific to the unit measured by the author. Verify dimensions,
+materials, fasteners, camera clearance, and tripod compatibility before making
+or using a Product.

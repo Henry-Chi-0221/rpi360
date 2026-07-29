@@ -23,6 +23,12 @@ animation also demonstrates portrait 1080 x 1920 and square 1440 x 1440 view
 configurations. All showcase frames are rendered from the native-size sample
 tracks before their README previews are downsampled.
 
+`hardware/` contains the CAD overview and assembly photographs used by the
+hardware guide. The public JPEG copies are resized and stripped of camera EXIF;
+the original-resolution photographs are intentionally not committed. Hardware
+photos use the CC BY 4.0 media license; the printable enclosure models use
+`CERN-OHL-P-2.0`.
+
 The original approximately 59-second camera files are intentionally not part
 of this repository.
 

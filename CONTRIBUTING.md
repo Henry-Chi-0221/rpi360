@@ -17,3 +17,7 @@ local calibration results, or calibration work directories outside the curated
 
 RPi camera changes also require a manual two-camera calibration, live-preview,
 recording, and playback test with Picamera2.
+
+Changes to `hardware/cad/` must retain the CERN-OHL-P-2.0 licence and applicable
+notices. Add a dated modification notice when conveying a modified hardware
+design.

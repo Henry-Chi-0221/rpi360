@@ -13,5 +13,6 @@ License text and details:
 https://creativecommons.org/licenses/by/4.0/legalcode
 
 The MIT License in LICENSE applies to source code and documentation, not to
-these media assets. Future CAD files are not covered until a license is added
-alongside them.
+these media assets. The enclosure STL files under hardware/cad are licensed
+separately under CERN-OHL-P-2.0; see hardware/cad/LICENSE and
+hardware/cad/NOTICE.
