@@ -8,24 +8,15 @@ The reference build uses:
 - Two [Arducam B0287 wide-angle Sony IMX219 modules](https://www.arducam.com/arducam-imx219-wide-angle-camera-module-for-nvidia-jetson-raspberry-pi-compute-module-4-3-3-b0287.html).
 - Two correct camera ribbon cables for the Raspberry Pi 5 CAM/DISP connectors.
 - A custom modeled and 3D-printed rigid frame.
-- Active cooling for the Raspberry Pi 5.
 - A high-quality microSD card with sufficient space for two simultaneous streams.
 - A reliable 5 V / 5 A supply. The
   [official Raspberry Pi 27 W USB-C supply](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#power-supply)
   is the safest reference.
 
-The original field build can be powered from a phone power bank, but only when
-the bank and cable sustain the required 5 V current without renegotiation or
-voltage drop. Camera disconnects and unexplained process termination are often
-power problems, not calibration failures.
-
-Check the Pi before and after a recording:
-
-```bash
-vcgencmd get_throttled
-```
-
-`0x0` means no under-voltage or throttling flags are active or latched.
+The printed enclosure has a dedicated opening measured for Henry Chi's existing
+phone power bank. It is a one-off mechanical fit: power banks with different
+dimensions will not fit that opening. Treat the enclosure dimensions as
+specific to the validated build, not as a universal power-bank mount.
 
 ## Rig geometry
 
@@ -39,9 +30,9 @@ rotation. Mechanical movement after calibration is not allowed. Re-run both
 calibration stages after changing a camera, lens focus, board position, ribbon
 cable routing, or the printed mount.
 
-Keep the case, Pi, cables, and power bank outside as much of each circular image
-as possible. A small unavoidable rig footprint can be hidden at the nadir, but
-large obstructions reduce overlap and SIFT matches.
+Keep the case, Pi, cables, and the fitted power bank outside as much of each
+circular image as possible. A small unavoidable rig footprint can be hidden at
+the nadir, but large obstructions reduce overlap and SIFT matches.
 
 ## Camera identity
 
@@ -67,6 +58,7 @@ Mount it to a flat surface. A warped sheet produces biased intrinsics.
 ## CAD status
 
 The original custom CAD is not included yet. `hardware/cad/` is intentionally
-reserved for the future STL/STEP/3MF files. Until those files are published,
-this document describes the optical and structural requirements but does not
-claim that the exact physical frame is reproducible.
+reserved for the future STL/STEP/3MF files. Any future model must name the exact
+power-bank model and measured dimensions it targets. Until those files are
+published, this document describes the optical and structural requirements but
+does not claim that the exact physical frame is reproducible.

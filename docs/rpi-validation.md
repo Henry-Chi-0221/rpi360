@@ -2,16 +2,15 @@
 
 Run this checklist on the assembled two-camera rig before publishing a release.
 
-## Power and cameras
+## Cameras and storage
 
 ```bash
-vcgencmd get_throttled
 rpicam-hello --list-cameras
 ```
 
-- `get_throttled` is `0x0`.
 - Both IMX219 cameras appear and their logical order is correct.
-- Active cooling is running.
+- The recording destination has enough free storage.
+- The camera cables and the custom power-bank mount cannot shift the lenses.
 
 ## Calibration
 
@@ -34,12 +33,8 @@ rpicam-hello --list-cameras
 - `rpi360 inspect` reports H.264 track IDs 1 and 2 and both metadata tags.
 - MP4 playback matches live rendering for the same camera pair and calibration.
 
-## Final power check
+## Final playback check
 
-```bash
-vcgencmd get_throttled
-vcgencmd measure_temp
-```
-
-Do not mark the hardware release as validated if under-voltage or throttling
-flags are latched.
+- Copy the recording to the playback machine.
+- Confirm all keys 1 through 8 and the three aspect-ratio examples.
+- Compare the MP4 view against the live view with the same orientation and FOV.

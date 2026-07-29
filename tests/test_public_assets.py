@@ -48,6 +48,18 @@ class PublicAssetTests(unittest.TestCase):
                     if stream.get("codec_type") == "video"
                 )
             )
+            video_streams = [
+                stream
+                for stream in probe["streams"]
+                if stream.get("codec_type") == "video"
+            ]
+            self.assertTrue(
+                all(
+                    (int(stream["width"]), int(stream["height"]))
+                    == (3280, 2464)
+                    for stream in video_streams
+                )
+            )
             result = read_embedded_calibration_result(path)
             self.assertEqual(result["calibration_state"], "complete")
             with Player.mp4(
@@ -61,15 +73,44 @@ class PublicAssetTests(unittest.TestCase):
                 self.assertEqual(frame.camera0.shape, (154, 205, 3))
 
     def test_readme_assets_and_links_exist(self):
-        expected = (
+        expected_images = (
             "hero.webp",
             "projection-grid.png",
             "tiny-planet.webp",
-            "view-controls.webp",
+            "rabbit-hole.webp",
+            "perspective-orbit.webp",
+            "barrel-roll.webp",
+            "aspect-ratios.webp",
         )
         showcase = self.root / "assets/showcase"
-        for name in expected:
+        for name in expected_images:
             path = showcase / name
+            self.assertTrue(path.is_file(), name)
+            self.assertGreater(path.stat().st_size, 1000)
+        expected_clips = (
+            "hero.mp4",
+            "tiny-planet.mp4",
+            "rabbit-hole.mp4",
+            "perspective-orbit.mp4",
+            "barrel-roll.mp4",
+            "aspect-ratios.mp4",
+        )
+        for name in expected_clips:
+            path = showcase / name
+            self.assertTrue(path.is_file(), name)
+            streams = [
+                stream
+                for stream in probe_media(path)["streams"]
+                if stream.get("codec_type") == "video"
+            ]
+            self.assertEqual(len(streams), 1)
+            self.assertEqual(streams[0]["codec_name"], "h264")
+            self.assertEqual(
+                (int(streams[0]["width"]), int(streams[0]["height"])),
+                (1920, 1080),
+            )
+        for name in ("system_overview.jpeg", "projections.jpeg"):
+            path = self.root / "assets" / name
             self.assertTrue(path.is_file(), name)
             self.assertGreater(path.stat().st_size, 1000)
         self.assertTrue(

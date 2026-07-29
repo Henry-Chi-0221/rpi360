@@ -13,6 +13,16 @@ views, stereographic views, and tiny-planet effects.
 This repository contains three small calibrated recordings, so desktop playback
 works immediately without Raspberry Pi hardware.
 
+## How the system fits together
+
+![RPI360 calibration and per-frame system overview](assets/system_overview.jpeg)
+
+Calibration is offline and updates one `calibration-result.json`. Live preview
+reads that JSON, while recording stores two untouched fisheye tracks plus the
+same complete result in one MP4. Playback then reconstructs every intermediate
+stage and projection from the embedded parameters. The same `PlayerFrame`
+contract is used by the OpenCV viewer, a custom application, or a service.
+
 ## Try it in five minutes on macOS or Linux
 
 Install Python 3.9+, OpenCV, and ffmpeg:
@@ -66,6 +76,52 @@ rpi360 play assets/samples/lake.r360.mp4 --display stereographic --fov 300
 
 ![RPI360 processing and projection comparison](assets/showcase/projection-grid.png)
 
+The renderer converts pixels to unit-sphere rays before changing projection.
+This is why one stitched frame can be viewed as equirectangular, perspective,
+stereographic, or at a different aspect ratio without recalibrating.
+
+![RPI360 fisheye, sphere, equirectangular, and stereographic coordinates](assets/projections.jpeg)
+
+## Effects and output shapes
+
+All four included effects use an absolute timestamp-derived orientation. A long
+animation therefore cannot accumulate incremental rotation error. The linked
+H.264 clips are 1920 x 1080 and were rendered from the native 3280 x 2464
+fisheye sample tracks.
+
+| Tiny planet | Rabbit hole |
+| --- | --- |
+| ![Tiny-planet effect](assets/showcase/tiny-planet.webp) | ![Rabbit-hole effect](assets/showcase/rabbit-hole.webp) |
+| [Full HD H.264 clip](assets/showcase/tiny-planet.mp4) | [Full HD H.264 clip](assets/showcase/rabbit-hole.mp4) |
+
+| Perspective orbit | Barrel roll |
+| --- | --- |
+| ![Perspective-orbit effect](assets/showcase/perspective-orbit.webp) | ![Barrel-roll effect](assets/showcase/barrel-roll.webp) |
+| [Full HD H.264 clip](assets/showcase/perspective-orbit.mp4) | [Full HD H.264 clip](assets/showcase/barrel-roll.mp4) |
+
+Preview the same deterministic effects through the public API:
+
+```bash
+python examples/playback/effects.py assets/samples/steps.r360.mp4 --effect tiny-planet
+python examples/playback/effects.py assets/samples/steps.r360.mp4 --effect rabbit-hole
+python examples/playback/effects.py assets/samples/waterfront.r360.mp4 --effect perspective-orbit
+python examples/playback/effects.py assets/samples/waterfront.r360.mp4 --effect barrel-roll
+```
+
+`Player.configure(size=...)` is aspect-ratio independent. This showcase renders
+16:9, 9:16, and 1:1 views from the same stitched frame:
+
+![RPI360 16:9, 9:16, and 1:1 output views](assets/showcase/aspect-ratios.webp)
+
+[Watch the Full HD aspect-ratio showcase](assets/showcase/aspect-ratios.mp4), or
+open one shape interactively:
+
+```bash
+python examples/playback/aspect_ratios.py assets/samples/lake.r360.mp4 --aspect-ratio 16:9
+python examples/playback/aspect_ratios.py assets/samples/lake.r360.mp4 --aspect-ratio 9:16
+python examples/playback/aspect_ratios.py assets/samples/lake.r360.mp4 --aspect-ratio 1:1
+```
+
 ## Hardware
 
 The validated camera uses:
@@ -73,18 +129,16 @@ The validated camera uses:
 - Raspberry Pi 5, 8 GB RAM.
 - 2 x [Arducam B0287 Sony IMX219 wide-angle camera modules](https://www.arducam.com/arducam-imx219-wide-angle-camera-module-for-nvidia-jetson-raspberry-pi-compute-module-4-3-3-b0287.html).
 - A rigid custom 3D-printed back-to-back camera frame.
-- Active cooling, microSD storage, and two Pi 5-compatible camera cables.
+- MicroSD storage and two Pi 5-compatible camera cables.
+- A dedicated enclosure opening measured for Henry Chi's existing phone power
+  bank. Other power-bank dimensions do not fit this one-off mount.
 - A reliable 5 V / 5 A supply; the
   [official 27 W supply](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#power-supply)
   is the safe reference.
 
-The original field rig also carries a phone power bank. Do not assume every
-power bank can sustain a Pi 5 plus two cameras. Before and after calibration or
-recording, verify:
-
-```bash
-vcgencmd get_throttled
-```
+The enclosure opening is not a general power-bank standard. Any future CAD
+release must identify the exact device and measured dimensions it was designed
+around.
 
 Use a local display or graphical desktop for the interactive OpenCV calibration
 windows. Plain SSH without display forwarding cannot show them.
@@ -226,6 +280,28 @@ rpi360 play capture.r360.mp4
 `Player.mp4()` always uses the calibration embedded in the MP4. It does not
 accept an external calibration JSON.
 
+The compact `rpi360` tag has this core JSON shape:
+
+```json
+{
+  "schema_version": 1,
+  "streams": {
+    "camera_0": {"track_id": 1, "width": 3280, "height": 2464, "fps": 21.0},
+    "camera_1": {"track_id": 2, "width": 3280, "height": 2464, "fps": 21.0}
+  },
+  "calibration": {
+    "camera_0": {"width": 1640, "height": 1232, "K": [[338.01, 0.0, 875.31], [0.0, 338.03, 611.58], [0.0, 0.0, 1.0]], "D": [0.0961, -0.0234, -0.0053, 0.0012], "fisheye_fov_deg": 210.0},
+    "camera_1": {"width": 1640, "height": 1232, "K": [[336.96, 0.0, 810.89], [0.0, 336.80, 623.99], [0.0, 0.0, 1.0]], "D": [0.0962, -0.0238, -0.0046, 0.0008], "fisheye_fov_deg": 210.0},
+    "R_cam1_to_cam0": [[-0.9997, 0.0065, -0.0239], [-0.0049, -0.9980, -0.0634], [-0.0243, -0.0633, 0.9977]]
+  }
+}
+```
+
+`rpi360_calibration_result` repeats the exact, unrounded calibration and adds
+`calibration_state` plus intrinsic and rig diagnostics. See the complete
+[MP4 JSON contract](docs/media-format.md), or use `rpi360 inspect INPUT.mp4` to
+print the actual stored values without abbreviation.
+
 ## Minimal Player API
 
 ```python
@@ -266,33 +342,10 @@ thread.
 See [the API guide](docs/api.md) and
 [`examples/playback/process_frames.py`](examples/playback/process_frames.py).
 
-## Effects
+## Rebuild the showcase
 
-Tiny planet uses a stereographic projection, FOV 300 degrees, absolute pitch
--90 degrees, and a deterministic roll sweep:
-
-![RPI360 tiny planet](assets/showcase/tiny-planet.webp)
-
-```bash
-python examples/playback/effects.py \
-  assets/samples/steps.r360.mp4 \
-  --effect tiny-planet
-```
-
-Other presets:
-
-```bash
-python examples/playback/effects.py assets/samples/steps.r360.mp4 --effect rabbit-hole
-python examples/playback/effects.py assets/samples/waterfront.r360.mp4 --effect perspective-orbit
-python examples/playback/effects.py assets/samples/waterfront.r360.mp4 --effect barrel-roll
-```
-
-![RPI360 view controls](assets/showcase/view-controls.webp)
-
-Effects call `set_orientation()` with an absolute timestamp-derived pose, so
-long animations do not accumulate floating-point or incremental rotation drift.
-
-Rebuild every README visual from the included MP4 files:
+Rebuild every README animation and Full HD clip from the included native-size
+MP4 tracks:
 
 ```bash
 python -m pip install -e ".[desktop,showcase]"
@@ -350,15 +403,6 @@ rgb = bgr[:, :, ::-1]
 
 Start with the default `quality="fast"`, a 1280 x 720 view, calibration-sized
 decode, and 2048 x 1024 panorama. Higher values trade latency for detail.
-
-**Camera or process suddenly disappears**
-
-Check power and temperature first:
-
-```bash
-vcgencmd get_throttled
-vcgencmd measure_temp
-```
 
 ## Design and format
 

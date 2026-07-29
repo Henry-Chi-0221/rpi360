@@ -11,6 +11,7 @@ from pathlib import Path
 from rpi360.common.metadata import (
     calibration_profile_from_result,
     load_calibration_result,
+    probe_media,
     require_executable,
 )
 from rpi360.rpi.recording import mux_recording
@@ -23,11 +24,21 @@ SAMPLES = {
 
 
 def encode_track(source: Path, output: Path) -> None:
-    selection = (
-        "select=between(n\\,105\\,230),"
-        "scale=1640:1232:flags=lanczos,"
-        "setpts=N/(21*TB)"
-    )
+    streams = [
+        stream
+        for stream in probe_media(source).get("streams", [])
+        if stream.get("codec_type") == "video"
+    ]
+    if not streams:
+        raise RuntimeError("{} contains no video stream".format(source))
+    width = int(streams[0]["width"])
+    height = int(streams[0]["height"])
+    if width < 1920 or height < 1080:
+        raise ValueError(
+            "{} is {}x{}; public samples require a full-resolution source "
+            "of at least 1920x1080".format(source, width, height)
+        )
+    selection = "select=between(n\\,105\\,230),setpts=N/(21*TB)"
     subprocess.run(
         [
             require_executable("ffmpeg"),
@@ -48,15 +59,9 @@ def encode_track(source: Path, output: Path) -> None:
             "-c:v",
             "libx264",
             "-preset",
-            "veryfast",
-            "-tune",
-            "zerolatency",
-            "-b:v",
-            "2200k",
-            "-maxrate",
-            "2600k",
-            "-bufsize",
-            "4400k",
+            "medium",
+            "-crf",
+            "25",
             "-pix_fmt",
             "yuv420p",
             "-movflags",
