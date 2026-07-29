@@ -638,8 +638,10 @@ def _object_point_template(
     checkerboard: Tuple[int, int], square_size: float
 ) -> np.ndarray:
     columns, rows = checkerboard
-    points = np.zeros((1, columns * rows, 3), dtype=np.float64)
-    points[0, :, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2) * float(square_size)
+    points = np.zeros((columns * rows, 1, 3), dtype=np.float64)
+    points[:, 0, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2) * float(
+        square_size
+    )
     return points
 
 
