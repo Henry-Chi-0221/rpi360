@@ -40,10 +40,23 @@ python -m pip install -e ".[desktop]"
 ffmpeg -version
 ```
 
-On Linux, install Python 3.9 or newer, `python3-venv`, and ffmpeg with the
-distribution package manager, then use the same commands starting at
-`git clone`, replacing the Homebrew interpreter line with
-`python3 -m venv .venv`.
+On Debian or Ubuntu Linux, copy and run the complete block below:
+
+```bash
+sudo apt update
+sudo apt install -y git python3-full python3-venv ffmpeg
+git clone https://github.com/Henry-Chi-0221/rpi360.git
+cd rpi360
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[desktop]"
+ffmpeg -version
+```
+
+For another Linux distribution, install Git, Python 3.9 or newer with venv
+support, and ffmpeg using its package manager, then run the block above from
+`git clone`.
 
 Open the included recording:
 
