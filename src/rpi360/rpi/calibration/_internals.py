@@ -45,8 +45,8 @@ def _as_calibration_points(
     objects: List[np.ndarray] = []
     images: List[np.ndarray] = []
     for object_set, image_set in zip(object_points, image_points):
-        object_array = np.asarray(object_set, dtype=np.float64).reshape(-1, 1, 3)
-        image_array = np.asarray(image_set, dtype=np.float64).reshape(-1, 1, 2)
+        object_array = np.asarray(object_set, dtype=np.float64).reshape(1, -1, 3)
+        image_array = np.asarray(image_set, dtype=np.float64).reshape(1, -1, 2)
         if len(object_array) != len(image_array) or len(object_array) < 4:
             raise ValueError(
                 "each calibration view needs at least four object/image points"
@@ -638,8 +638,8 @@ def _object_point_template(
     checkerboard: Tuple[int, int], square_size: float
 ) -> np.ndarray:
     columns, rows = checkerboard
-    points = np.zeros((columns * rows, 1, 3), dtype=np.float64)
-    points[:, 0, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2) * float(
+    points = np.zeros((1, columns * rows, 3), dtype=np.float64)
+    points[0, :, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2) * float(
         square_size
     )
     return points
@@ -692,7 +692,7 @@ def _solve_guided_intrinsics(
         _object_point_template(config.checkerboard, config.square_size) for _ in corners
     ]
     images = [
-        np.asarray(value, dtype=np.float64).reshape(-1, 1, 2) for value in corners
+        np.asarray(value, dtype=np.float64).reshape(1, -1, 2) for value in corners
     ]
     image_size = (config.width, config.height)
     flags = (
