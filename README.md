@@ -25,17 +25,25 @@ contract is used by the OpenCV viewer, a custom application, or a service.
 
 ## Try it in five minutes on macOS or Linux
 
-Install Python 3.9+, OpenCV, and ffmpeg:
+On macOS, install a current Python and ffmpeg with
+[Homebrew](https://brew.sh/). Using the Homebrew interpreter explicitly avoids
+Apple's older system Python:
 
 ```bash
+brew install python@3.13 ffmpeg
 git clone https://github.com/Henry-Chi-0221/rpi360.git
 cd rpi360
-python3 -m venv .venv
+"$(brew --prefix python@3.13)/bin/python3.13" -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[desktop]"
 ffmpeg -version
 ```
+
+On Linux, install Python 3.9 or newer, `python3-venv`, and ffmpeg with the
+distribution package manager, then use the same commands starting at
+`git clone`, replacing the Homebrew interpreter line with
+`python3 -m venv .venv`.
 
 Open the included recording:
 

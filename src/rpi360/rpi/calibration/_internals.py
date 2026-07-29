@@ -26,6 +26,16 @@ from ...common.rendering import (
 )
 
 
+def _fisheye_calibration_flag(name: str) -> int:
+    """Resolve calibration flags across the OpenCV 4 and 5 Python layouts."""
+    fisheye = getattr(cv2, "fisheye", None)
+    if fisheye is not None and hasattr(fisheye, name):
+        return int(getattr(fisheye, name))
+    if hasattr(cv2, name):
+        return int(getattr(cv2, name))
+    raise RuntimeError(f"OpenCV does not provide fisheye calibration flag {name}")
+
+
 def _as_calibration_points(
     object_points: Sequence[np.ndarray],
     image_points: Sequence[np.ndarray],
@@ -64,9 +74,9 @@ def calibrate_intrinsics(
         raise ValueError("image_size must contain positive width and height")
     if calibration_flags is None:
         calibration_flags = (
-            cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC
-            | cv2.fisheye.CALIB_CHECK_COND
-            | cv2.fisheye.CALIB_FIX_SKEW
+            _fisheye_calibration_flag("CALIB_RECOMPUTE_EXTRINSIC")
+            | _fisheye_calibration_flag("CALIB_CHECK_COND")
+            | _fisheye_calibration_flag("CALIB_FIX_SKEW")
         )
 
     K = np.array(
@@ -684,9 +694,9 @@ def _solve_guided_intrinsics(
     ]
     image_size = (config.width, config.height)
     flags = (
-        cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC
-        | cv2.fisheye.CALIB_FIX_SKEW
-        | cv2.fisheye.CALIB_USE_INTRINSIC_GUESS
+        _fisheye_calibration_flag("CALIB_RECOMPUTE_EXTRINSIC")
+        | _fisheye_calibration_flag("CALIB_FIX_SKEW")
+        | _fisheye_calibration_flag("CALIB_USE_INTRINSIC_GUESS")
     )
     criteria = (
         cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER,
