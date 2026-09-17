@@ -36,7 +36,7 @@ stopping a recording; reconnect to stop/finalize it and download the bundle.
 
 The service defaults to 1640×1232, 30 fps, 8 Mbps per camera, retaining full sensor
 field of view. These are requested settings, not a sustained-performance promise.
-The preview initially uses two 820×616 images in one 1640×616 H.264 track.
+The preview initially uses two 720×540 images in one 1440×540 baseline H.264 track.
 
 ## Trusted HTTPS deployment
 

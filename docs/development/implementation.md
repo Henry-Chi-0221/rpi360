@@ -14,9 +14,9 @@ Baseline: `fb8de0404209186b6904fed889f79ed6a72e4037`.
 | P2 | Picamera2 sensor-clock capture, software sync, bounded write queue, fMP4 recovery | 60-minute retention and physical power-cut test |
 | P3 | Pairing/revocation, H.264 paired WebRTC, Range transfer, revisioned sensor settings | Weak-network/latency and trusted-HTTPS LAN matrix |
 | P4 | Web local import, rendering, keyframes, presets, IndexedDB/OPFS, MP4/360 export | Safari/WebKit and large-file lifecycle matrix |
-| P5 | Native worker, legacy adapters/converters, Swift C ABI plus GPU adapter | Full iOS SDK/device certification |
+| P5 | Native worker, legacy adapters/converters, Swift C ABI plus GPU adapter | Physical iOS device and application integration validation |
 | P6 | Eight recipes rendered from existing originals; clean posters; bilingual product entry | Versioned public media upload with release |
-| P7 | Python platform wheel smoke-tested; build/test workflows and release tooling | Endurance, deployment rollback, complete release evidence |
+| P7 | Python wheel and Pi installer smoke-tested; Linux/Apple CI builds; release tooling | Endurance, deployment rollback, complete release evidence |
 
 This is an executable alpha implementation. A stable v2 release has not been published.
 See [executed validation](../validation/status.md) for exact outcomes and limitations.

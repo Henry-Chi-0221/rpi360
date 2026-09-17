@@ -63,6 +63,22 @@ TypeScript checking, Vite production build and Ruff checks passed.
 - A macOS ARM64 Python wheel was built, installed into an independent environment,
   and loaded its packaged C ABI successfully from outside the checkout.
 
+## Clean-build verification
+
+GitHub Actions on commit `0edb7625` passed both Python 3.11/3.13 contract jobs,
+including the full 82-test Python suite, Rust tests, native/WASM parity, wheel
+build and schema regeneration. The Apple job built macOS ARM64, iOS ARM64 and
+iOS Simulator ARM64 libraries, passed two Swift XCTest cases and the C ABI smoke
+executable. This extends compilation coverage; physical Apple devices remain
+unvalidated. The initial Web job exposed a missing pnpm esbuild allow-list entry;
+the explicit package allow-list is corrected in the following commit.
+
+The deployment installer also completed on the actual Pi in a new release
+folder. Its independent virtual environment loaded Picamera2/PyAV, started the
+API, paired a test client, returned authenticated status and stopped. This smoke
+test acquired no camera and did not activate or overwrite existing deployments.
+It does not validate version rollback or sustained capture.
+
 ## Preview profile adjustment
 
 The original 1640×616 preview uses 4,017 H.264 macroblocks per frame, exceeding
