@@ -73,6 +73,12 @@ A hostname such as `raspberrypi`, its `.local` name, or a LAN IP can be used.
 Enter your SSH password when prompted. Successful tunneling stays running
 without returning a shell prompt. Keep this terminal open.
 
+If an RPI360 API is already reachable on local port 8765, `make connect` reports
+that the existing connection is available and exits successfully without asking
+for a password or opening another tunnel. Keep the original tunnel running and
+use the workspace. This does not verify or switch its SSH destination; close
+the old tunnel first when intentionally connecting to another camera.
+
 **Terminal 2 — workspace:**
 
 ```sh
@@ -116,7 +122,8 @@ proxy. Both should return JSON with `name: RPI360` and a `paired` state.
 | What you see | What to do |
 | --- | --- |
 | Cannot reach the Pi / empty HTTP 500 | Check both commands above. Start the Pi service and keep the SSH tunnel open. |
-| `bind: Address already in use` on 8765 | An existing tunnel may already be running. Check `/v1/info`; reuse it, or close your obsolete tunnel before restarting. |
+| API already available on 8765 | The helper found an existing connection. Reuse it and go to the browser; no new SSH login is needed. |
+| Port 8765 occupied but API unavailable | The listener may be a stale tunnel or another program. Check it with `lsof -nP -iTCP:8765 -sTCP:LISTEN`, then check the Pi service. The helper leaves the existing process untouched. |
 | Port 5173 already in use | Reuse the running workspace at `http://localhost:5173`; do not start a second copy. |
 | Pairing code invalid or expired | If never paired, restart the service and use the new five-minute code. A saved token needs no new code. |
 | `401` / pair this client first | Enter the Pi code, or return to the already-paired tab. Tokens are currently stored in that tab's session storage. |
