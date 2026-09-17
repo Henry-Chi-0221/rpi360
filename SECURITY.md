@@ -16,9 +16,20 @@ On macOS, persistent preview adds a dedicated SSH key scoped to Pi loopback port
 is stored with mode 0600 under the user's RPI360 application data. Passwords are
 not stored. Revoke the public key on the Pi to remove this machine's access;
 stopping local LaunchAgents alone does not revoke it.
-Do not expose or reverse-proxy this local mode on an external interface.
+Do not expose the loopback API directly on an external interface.
 
-Direct LAN deployments require trusted HTTPS plus an operator-managed bearer
+The optional `make ipad` gateway explicitly trusts devices on the camera's
+configured IPv4 LAN subnet. It serves the Web app and proxies the loopback API
+through HTTPS, with hostname, peer-subnet and browser-origin checks before
+forwarding any request. It removes forwarded identity headers before reaching
+the local API. This mode provides shared LAN access, not per-user authentication.
+The HTTP bootstrap port serves only setup instructions and the public CA
+certificate. Private CA keys stay in the user's private application directory;
+verify the Pi's certificate fingerprint before installing it on an iPad.
+Do not forward these services from the public internet or put an untrusted proxy
+in front of them. Keep the gateway's CA data private and preserve it across updates.
+
+Deployments requiring restricted access use trusted HTTPS plus an operator-managed bearer
 token file (0600, at least 32 ASCII characters; generate it cryptographically).
 The token is never printed or persisted by the Web client. Rotate the file and
 restart the service to replace it after finalizing recording. Allow only trusted

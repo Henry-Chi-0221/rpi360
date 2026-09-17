@@ -1,0 +1,82 @@
+{
+	admin off
+	auto_https disable_redirects
+	skip_install_trust
+	storage file_system @@STORAGE@@
+	pki {
+		ca local {
+			name "RPI360 camera"
+		}
+	}
+}
+
+(lan_only) {
+	@outside not remote_ip @@SUBNET@@ 127.0.0.0/8 ::1
+	respond @outside "This workbench is available on the camera LAN only." 403
+	header X-Content-Type-Options nosniff
+}
+
+https://@@HOST@@:8443, https://@@IP@@:8443 {
+	bind 0.0.0.0
+	tls internal
+	route {
+		import lan_only
+		header X-Frame-Options DENY
+		@bad_origin {
+			header Origin *
+			not {
+				header Origin https://@@HOST@@:8443
+				header Origin https://@@IP@@:8443
+			}
+		}
+		respond @bad_origin "Origin is not allowed." 403
+		@cross_site_api {
+			path /v1/* /api/v1/*
+			header Sec-Fetch-Site cross-site
+		}
+		respond @cross_site_api "Cross-site API requests are not allowed." 403
+		handle /healthz {
+			respond "RPI360 Pi Workbench" 200
+		}
+		@api path /v1/* /api/v1/*
+		handle @api {
+			uri strip_prefix /api
+			reverse_proxy 127.0.0.1:8765 {
+				header_up Host 127.0.0.1:8765
+				header_up -Origin
+				header_up -Sec-Fetch-Site
+				header_up -Forwarded
+				header_up -X-Forwarded-For
+				header_up -X-Forwarded-Host
+				header_up -X-Forwarded-Proto
+				flush_interval -1
+			}
+		}
+		handle {
+			root * @@WEB@@
+			file_server
+		}
+	}
+}
+
+# Only setup instructions and the public CA certificate are served over HTTP.
+http://@@HOST@@:8080, http://@@IP@@:8080 {
+	bind 0.0.0.0
+	route {
+		import lan_only
+		@setup path / /index.html /rpi360-ca.crt
+		handle @setup {
+			root * @@SETUP@@
+			header /rpi360-ca.crt Content-Type application/x-x509-ca-cert
+			file_server
+		}
+		handle {
+			respond "Open the HTTPS workbench to use the camera." 404
+		}
+	}
+}
+
+https://:8443, http://:8080 {
+	bind 0.0.0.0
+	respond "Unknown camera hostname." 421
+}

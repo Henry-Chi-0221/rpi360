@@ -1030,6 +1030,12 @@ export default function App() {
               onPointerUp={() => {
                 drag.current = null;
               }}
+              onPointerCancel={() => {
+                drag.current = null;
+              }}
+              onLostPointerCapture={() => {
+                drag.current = null;
+              }}
               onWheel={(e) =>
                 manual(
                   angles,

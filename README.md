@@ -7,31 +7,28 @@ camera, then preview, reframe, edit and export on your own device.
 
 [Try the workspace](#try-it-without-a-camera) · [Connect your Pi](#connect-your-pi-for-live-preview) · [Simple API](#simple-api) · [How it works](#how-it-works)
 
-**Keyframe Reframing** — smooth virtual camera movement over the original footage.
-
-https://github.com/user-attachments/assets/f709c2bc-e7fb-4237-8da4-f169f05dda97
-
 **v2 alpha.** Local browser export and short Pi recording/preview flows have been
 validated. Sustained hardware performance and Apple device certification remain
 release gates. See the [validation report](docs/validation/status.md).
 
-## How it works
+## System overview
 
-![Capture, paired preview, recorded files, and client-side rendering](docs/images/system-overview.svg)
+![Original RPI360 diagram: offline camera registration and per-frame projection pipeline](assets/system_overview.jpeg)
 
-1. **The Pi captures.** One service synchronizes both cameras, records each
-   source with its real timestamps, and provides a low-latency preview.
-2. **Your device renders.** A single preview frame contains both unstitched
-   fisheyes. Your browser decodes it and uses the calibration to construct a view.
-3. **Your edit stays separate.** FOV, orientation, keyframes and speed changes
-   live in a project. Download a recording and continue editing offline.
-
-Live preview and recorded playback use the same geometry. There is no camera-side
-VR rendering, and changing the view does not renegotiate the stream.
+**Calibrate the rig, then reuse that calibration for every frame.** The upper
+pipeline estimates the cameras' relative rotation. The lower pipeline shows how
+their images become directions in a shared scene and then the view you choose.
+In v2, the Pi captures and streams the source images; the viewing device performs
+the per-frame projection and blending. The GPU can combine these steps without
+first creating an intermediate panorama.
 
 ## From fisheye to your view
 
-![Orientation, horizontal FOV, projection types and the ray-to-fisheye mapping](docs/images/projection-guide.svg)
+![Original RPI360 projection relationships: fisheye coordinates, 3D rays, equirectangular and stereographic coordinates](assets/projections.jpeg)
+
+The same direction in the scene can be represented as a fisheye pixel, a ray on
+the unit sphere, a panorama pixel or a stereographic pixel. These are different
+ways to represent the same captured scene.
 
 **Orientation** chooses where you look. **Horizontal FOV** chooses how wide you
 see. **Projection** chooses how directions map to a flat image:
@@ -46,7 +43,12 @@ For each output pixel, the GPU builds a viewing ray, applies orientation, maps
 that direction through both calibrated lenses, and blends their overlap. A
 perspective view samples the fisheyes directly; a panorama is only produced when
 you request one. Changing aspect ratio changes coverage without stretching the
-image. [Coordinate system and projection details](docs/architecture/core.md).
+image.
+
+The original diagrams use their own coordinate convention. For code and
+calibration files, follow the [v2 coordinate contract](docs/architecture/core.md):
+rig +X is right, +Y is up and -Z is forward; legacy calibration is converted on
+import.
 
 ## Demo videos
 
@@ -56,6 +58,12 @@ outside the image: no labels, watermarks or debug overlays are burned in.
 The original outdoor footage has irregular motion at approximately **5.6–6 fps**.
 The exports update at 30 fps; this smooths virtual camera motion but cannot invent
 missing captured detail. The still-frame demonstrations are identified below.
+
+### Keyframe Reframing
+
+Smooth virtual camera movement over the original footage.
+
+https://github.com/user-attachments/assets/f709c2bc-e7fb-4237-8da4-f169f05dda97
 
 ### Tiny Planet
 
@@ -165,6 +173,25 @@ Camera panel to edit and export locally.
 The Pi API binds to loopback; SSH authenticates access. WebRTC video travels
 directly over the LAN. [Setup and troubleshooting](docs/getting-started/camera.md).
 
+### iPad + Pi, without a Mac
+
+The Pi can host the complete workbench. After building the Web app and installing
+the camera release, run **on the Pi**:
+
+```sh
+make ipad CALIBRATION=/path/to/your/calibration.json
+```
+
+Open the printed setup URL in iPad Safari and trust this Pi's HTTPS certificate
+once. Then use **https://raspberrypi.local:8443 → Camera → Open live preview**.
+The Pi services start at boot; no Mac, open terminal, pairing code or cloud account
+is needed. This mode shares camera access with devices on your trusted local
+subnet. FOV and orientation render on the iPad. `localhost:5173` remains the
+separate Mac workflow.
+
+[iPad setup and service management](docs/getting-started/ipad.md) ·
+[Validation and remaining device checks](docs/validation/ipad-preview.md).
+
 ## Simple API
 
 The SDKs are workspace packages in this alpha. Use them from this checkout.
@@ -200,6 +227,20 @@ recording = camera.stop_recording()
 Install locally with `uv sync`, then run with `uv run python`. The browser and
 Python share the same SSH connection; neither needs an application token. [API guide and complete examples](docs/getting-started/api.md) ·
 [OpenAPI](schemas/device-api.openapi.yaml) · [Swift SDK](packages/apple-sdk/README.md).
+
+## How it works
+
+![Capture, paired preview, recorded files, and client-side rendering](docs/images/system-overview.svg)
+
+1. **The Pi captures.** One service synchronizes both cameras, records each
+   source with its real timestamps, and provides a low-latency preview.
+2. **Your device renders.** A single preview frame contains both unstitched
+   fisheyes. Your browser decodes it and uses the calibration to construct a view.
+3. **Your edit stays separate.** FOV, orientation, keyframes and speed changes
+   live in a project. Download a recording and continue editing offline.
+
+Live preview and recorded playback use the same geometry. There is no camera-side
+VR rendering, and changing the view does not renegotiate the stream.
 
 ## Repository map
 

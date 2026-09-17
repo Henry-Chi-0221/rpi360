@@ -1,5 +1,8 @@
 # Connect a Pi and open live VR
 
+For **iPad + Pi with no Mac**, use the [Pi-hosted workbench](ipad.md). The SSH
+workflow below is for a computer running its own local workbench.
+
 The normal workflow uses your existing SSH login. There are no pairing codes,
 accounts, saved browser tokens or exclusive controller registration. The camera
 API listens on Pi loopback, and the local workbench reaches it through SSH.

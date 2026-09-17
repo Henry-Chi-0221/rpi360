@@ -1,4 +1,4 @@
-.PHONY: setup core wasm web check test demos connect preview preview-status preview-stop camera
+.PHONY: setup core wasm web check test demos connect preview preview-status preview-stop camera ipad
 setup:
 	uv sync --all-packages --extra dev
 	pnpm install
@@ -28,3 +28,5 @@ preview-stop:
 	node tools/preview.mjs stop
 camera:
 	bash tools/run-camera.sh "$(CALIBRATION)"
+ipad:
+	python3 tools/install-ipad.py $(if $(CALIBRATION),--calibration "$(CALIBRATION)")

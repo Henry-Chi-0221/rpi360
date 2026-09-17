@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg caddy
       - run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy --target wasm32-unknown-unknown
       - run: rustup default 1.98.1
       - run: cargo fmt --all --check && cargo test --workspace --locked

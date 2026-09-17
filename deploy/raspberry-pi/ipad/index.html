@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RPI360 · iPad setup</title>
+<style>
+  :root { color-scheme: dark; font: 18px/1.65 system-ui, sans-serif; background: #101b15; color: #e6eee8; }
+  body { max-width: 640px; margin: auto; padding: 32px 24px 64px; }
+  h1 { line-height: 1.15; font-size: clamp(32px, 7vw, 48px); }
+  h2 { font-size: 22px; margin-top: 40px; }
+  a { color: #b8e8b0; }
+  .button { display: inline-block; padding: 12px 20px; border-radius: 12px; background: #b8e8b0; color: #142419; font-weight: 650; text-decoration: none; }
+  li { margin: 14px 0; }
+  code { overflow-wrap: anywhere; font-size: 14px; }
+  .muted { color: #a4b8a8; }
+</style>
+<p class="muted">RPI360 / Camera workbench</p>
+<h1>Your iPad is the viewfinder.</h1>
+<p>This page comes directly from your Raspberry Pi. Connect both devices to the
+same trusted Wi-Fi network. No Mac, app account or pairing code is needed.</p>
+<h2>First visit: trust your camera</h2>
+<p>Safari needs a trusted HTTPS connection for the GPU preview. This is a one-time
+setup for this Pi, not a code you enter every time.</p>
+<ol>
+  <li><a class="button" href="/rpi360-ca.crt">Download Pi certificate</a><br>
+  Allow the configuration profile download.</li>
+  <li>Open <strong>Settings → General → VPN &amp; Device Management</strong>.
+  Select the downloaded <strong>RPI360 camera</strong> certificate and tap
+  <strong>Install</strong>.</li>
+  <li>Open <strong>Settings → General → About → Certificate Trust Settings</strong>.
+  Turn on full trust for <strong>RPI360 camera</strong>.</li>
+</ol>
+<p><a href="https://support.apple.com/102390">Apple's certificate trust instructions</a></p>
+<h2>Open live preview</h2>
+<p><a class="button" href="https://@@HOST@@:8443/">Open camera workbench</a></p>
+<p>If the hostname does not resolve, use <a href="https://@@IP@@:8443/">@@IP@@</a>.</p>
+<p>Choose <strong>Camera → Open live preview</strong>. Drag to look around and
+use the <strong>Field of view</strong> slider to zoom. The Pi captures; your
+iPad renders the view. Close any other active preview first.</p>
+<p>Bookmark the HTTPS page, or use Safari's <strong>Add to Home Screen</strong>.
+Keep it in the foreground while previewing. Recording continues on the Pi when
+you close the page.</p>
+<h2>About this connection</h2>
+<p>This simple mode gives devices on your camera's local subnet access to its
+controls and recordings. Use a trusted private network.</p>
+<p class="muted">Only install your own Pi's certificate. Compare this SHA-256
+fingerprint with the installer output on the Pi:</p>
+<p><code>@@FINGERPRINT@@</code></p>
+</html>
