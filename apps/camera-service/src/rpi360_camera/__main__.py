@@ -14,6 +14,11 @@ def main():
         "--data-dir", type=Path, default=Path.home() / ".local/share/rpi360"
     )
     parser.add_argument("--calibration", type=Path)
+    parser.add_argument(
+        "--auto-capture",
+        action="store_true",
+        help="Start both sensors with the service; never starts recording",
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--origin", action="append", default=[])
@@ -46,7 +51,9 @@ def main():
     os.umask(0o077)
     engine = CaptureEngine(args.data_dir, load_calibration(args.calibration))
     origins = args.origin or ["http://localhost:5173", "http://127.0.0.1:5173"]
-    app = create_app(engine, origins, args.web_root, api_token=token)
+    app = create_app(
+        engine, origins, args.web_root, api_token=token, auto_capture=args.auto_capture
+    )
     print("Access: " + app.state.access.mode + "; no pairing code is used.", flush=True)
     uvicorn.run(
         app,

@@ -63,8 +63,8 @@ camera releases and the Mac preview launcher are preserved.
 4. In **Settings → General → About → Certificate Trust Settings**, enable full
    trust for that certificate. This is required separately by
    [iPadOS](https://support.apple.com/102390).
-5. Return to Safari and open `https://raspberrypi.local:8443`. Choose
-   the **Open live preview** button at the top. Wait for **LIVE · Synced**.
+5. Return to Safari and open `https://raspberrypi.local:8443`. The workbench
+   automatically opens live preview. Wait for **LIVE · Synced**.
 
 The certificate trust step happens once per Pi/iPad. It enables Safari's secure
 browser features; it is not a recurring pairing flow. The setup page shows the
@@ -91,7 +91,7 @@ turn on MagicDNS. On the Pi, from the repository root, run:
 make tailscale
 ```
 
-Open **https://raspberrypi:8443/** on the iPad, then **Open live preview**. Use your
+Open **https://raspberrypi:8443/** on the iPad; live preview opens automatically. Use your
 Pi's actual Tailscale node name if it differs. The command also prints its
 `https://100.x.y.z:8443/` fallback and adds both links to the certificate setup
 page at `http://100.x.y.z:8080/`. A Mac, SSH tunnel, subnet router and exit node
@@ -124,6 +124,31 @@ iPad, then try the printed Tailscale IP. If the page opens but video does not,
 close any other preview and check UDP access. To verify media with **only**
 Tailscale ICE candidates (no silent LAN fallback), run the
 [diagnostic](../validation/ipad-preview.md#reproduce) with `--tailscale-only`.
+
+## Power on and preview
+
+After the one-time installation and certificate trust, power on the Pi and open
+its HTTPS address from the iPad. No SSH login, terminal command or preview-button
+press is required. Keep Tailscale connected on both devices when using its name.
+
+The installed camera service starts both sensors with `--auto-capture` and warms
+synchronization at service startup. The Web service and Tailscale start at boot;
+`Linger=yes` starts the user services without a login. Camera/Web services retry
+startup failures, including a late network interface, without a restart-rate
+lockout. Encoding the live stream starts when a viewer connects. Recording still
+requires the explicit **Start recording** action.
+
+The Pi-hosted workbench opens preview once the API and renderer are ready. It
+skips loading a sample image first. Closing preview keeps you in the editor;
+a status poll does not reopen it. Use `?view=editor` to open directly for editing,
+or `?view=live` to request automatic preview on the localhost workbench too.
+The **Open live preview** button remains available for retry or browser playback
+restrictions. Safari's actual autoplay behavior must still be verified on the
+target iPad; the stream is muted and uses inline playback.
+
+When upgrading an older deployment, install the current camera release before
+rerunning `make ipad`: older executables do not understand `--auto-capture`.
+The installer checks this before changing the active services.
 
 ## Service management
 

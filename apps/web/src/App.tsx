@@ -106,6 +106,12 @@ export default function App() {
   const directCamera =
     location.protocol === "https:" &&
     !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+  const initialLiveMode = useRef(
+    new URLSearchParams(location.search).get("view") === "live" ||
+      (directCamera &&
+        new URLSearchParams(location.search).get("view") !== "editor"),
+  ).current;
+  const autoPreviewPending = useRef(initialLiveMode);
   const [message, setMessage] = useState("Loading the shared renderer…"),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -139,6 +145,8 @@ export default function App() {
     setPlaying(false);
   };
   function openPanel(next: string) {
+    if (next === "library" || next === "effects")
+      autoPreviewPending.current = false;
     setTab(next);
     setPanelOpen(window.matchMedia("(max-width: 850px)").matches);
     if (next === "device") void refreshRemote().catch(fail);
@@ -267,7 +275,14 @@ export default function App() {
         const items = await fetch("/demo/catalog.json").then((r) => r.json());
         if (disposed) return;
         setCatalog(items);
-        await loadDemo(items[0]);
+        if (initialLiveMode) {
+          setTitle("Live camera");
+          setSourceKind("Paired fisheye stream");
+          setMessage("Waiting for the camera to become ready…");
+          setLoading(false);
+        } else {
+          await loadDemo(items[0]);
+        }
         setSaved(await projects());
         setLocalIds(await localRecordings());
       } catch (e) {
@@ -344,6 +359,14 @@ export default function App() {
       controller.abort();
     };
   }, [device]);
+  useEffect(() => {
+    if (!autoPreviewPending.current || !device || loading || liveBusy || liveOn)
+      return;
+    // Attempt once after startup readiness. Closing preview or choosing the
+    // library is intentional and must never be undone by another status poll.
+    autoPreviewPending.current = false;
+    void startLive();
+  }, [device, loading, liveBusy, liveOn]);
   useEffect(() => {
     if (renderer.current)
       try {
@@ -528,6 +551,7 @@ export default function App() {
   }
   async function startLive() {
     if (progress !== null || livePending.current || loading) return;
+    autoPreviewPending.current = false;
     livePending.current = true;
     setLiveBusy(true);
     setPanelOpen(false);
@@ -546,6 +570,8 @@ export default function App() {
               : "Recorded dual fisheye",
           );
           await frameAt(clock.current);
+        } else if (catalog.length) {
+          await loadDemo(catalog[0]);
         }
         setMessage("Live preview closed · camera recording is independent");
         return;
@@ -564,6 +590,11 @@ export default function App() {
         renderer.current = await Renderer.create(canvas.current!, c.profile);
       else renderer.current.setCalibration(c.profile);
       live.current = await camera.preview(video.current!, setDiagnostics);
+      renderer.current.upload(
+        video.current!,
+        video.current!.videoWidth,
+        video.current!.videoHeight,
+      );
       setMode("view");
       setRatio("16:9");
       draw({ ...defaultView });
@@ -573,6 +604,10 @@ export default function App() {
       setMessage("Live preview · rendered on this device");
       setLoading(false);
     } catch (e) {
+      const session = live.current;
+      live.current = null;
+      setLiveOn(false);
+      await session?.close().catch(() => {});
       fail(e);
     } finally {
       livePending.current = false;

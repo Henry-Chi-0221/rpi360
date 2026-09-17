@@ -34,7 +34,9 @@ class Offer(BaseModel):
     type: Literal["offer"]
 
 
-def create_app(engine, allowed_origins=(), web_root=None, *, api_token=None):
+def create_app(
+    engine, allowed_origins=(), web_root=None, *, api_token=None, auto_capture=False
+):
     access = AccessPolicy(api_token)
     connections = {}
     preview_lock = asyncio.Lock()
@@ -45,12 +47,16 @@ def create_app(engine, allowed_origins=(), web_root=None, *, api_token=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        yield
-        for task in watchdogs:
-            task.cancel()
-        await asyncio.gather(*watchdogs, return_exceptions=True)
-        await asyncio.gather(*(pc.close() for pc, _ in list(connections.values())))
-        await asyncio.to_thread(engine.close)
+        try:
+            if auto_capture:
+                await asyncio.to_thread(engine.start)
+            yield
+        finally:
+            for task in watchdogs:
+                task.cancel()
+            await asyncio.gather(*watchdogs, return_exceptions=True)
+            await asyncio.gather(*(pc.close() for pc, _ in list(connections.values())))
+            await asyncio.to_thread(engine.close)
 
     app = FastAPI(title="RPI360 Device API", version="2.0.0-alpha.1", lifespan=lifespan)
     app.state.engine = engine

@@ -192,3 +192,46 @@ def test_cli_refuses_unauthenticated_lan_before_starting_hardware(monkeypatch):
     with pytest.raises(SystemExit) as error:
         main()
     assert error.value.code == 2
+
+
+def test_auto_capture_warms_sensors_before_serving_without_recording(tmp_path):
+    class WarmEngine(Engine):
+        def __init__(self, root):
+            super().__init__(root)
+            self.captures = self.closes = 0
+
+        def start(self):
+            self.captures += 1
+
+        def close(self):
+            self.closes += 1
+
+    engine = WarmEngine(tmp_path)
+    with local_client(create_app(engine, auto_capture=True)) as client:
+        assert engine.captures == 1
+        assert client.get("/v1/status").status_code == 200
+        assert engine.starts == 0  # Recording still requires an explicit command.
+    assert engine.closes == 1
+
+    engine = WarmEngine(tmp_path)
+    with local_client(create_app(engine)):
+        assert engine.captures == 0  # Preserve on-demand CLI/API behaviour.
+
+
+def test_auto_capture_startup_failure_releases_resources_and_fails_startup(tmp_path):
+    import pytest
+
+    class BrokenEngine(Engine):
+        closed = False
+
+        def start(self):
+            raise RuntimeError("sensors not ready")
+
+        def close(self):
+            self.closed = True
+
+    engine = BrokenEngine(tmp_path)
+    with pytest.raises(RuntimeError, match="sensors not ready"):
+        with local_client(create_app(engine, auto_capture=True)):
+            raise AssertionError("API became ready before the sensors")
+    assert engine.closed

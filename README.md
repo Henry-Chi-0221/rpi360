@@ -183,7 +183,8 @@ make ipad CALIBRATION=/path/to/your/calibration.json
 ```
 
 Open the printed setup URL in iPad Safari and trust this Pi's HTTPS certificate
-once. Then use **https://raspberrypi.local:8443 → Open live preview**.
+once. After that, power on the Pi and open **https://raspberrypi.local:8443**;
+live preview opens automatically. No SSH login or Mac is needed.
 For Tailscale, run `make tailscale` on the Pi and open
 **https://raspberrypi:8443/**. It uses the same trusted Pi certificate.
 The Pi services start at boot; no Mac, open terminal, pairing code or cloud account

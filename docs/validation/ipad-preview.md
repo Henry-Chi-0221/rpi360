@@ -36,8 +36,9 @@ iPadOS 27.0; Safari display and touch validation await that physical device.
 The test client ran on a computer as a **direct LAN client**. Its requests and
 video did not use the Mac workbench, SSH tunnel or a Mac media worker. This proves
 the Pi-side deployment path, not Safari's decoding/rendering performance.
-Crash tests were performed with no active recording. Boot configuration was
-checked; a physical Pi reboot/power-cut test was not performed this round.
+Crash tests were performed with no active recording. The initial gateway round
+checked boot configuration only. A subsequent normal reboot was executed as
+recorded below; physical power interruption remains untested.
 
 ## Responsive navigation follow-up
 
@@ -92,6 +93,45 @@ The gateway now explicitly uses HTTP/1.1 and HTTP/2; WebRTC video retains its
 separate UDP transport. The dual-stack gateway test covers this startup case.
 Caddy's automatic `*.ts.net` certificate delegation is not used: this mode
 serves the short MagicDNS name and overlay IPs with the existing private Pi CA.
+
+## Automatic startup and preview follow-up
+
+Executed on 2026-09-17 using camera release `boot-preview-c7acdfb0205f` and Web
+release `b5c934e5e5c86b2b`. The installed camera service now uses `--auto-capture`;
+both user services restart on failure without a systemd start-rate limit.
+
+- Disabled the Mac camera-tunnel LaunchAgent, checked that no recording was
+  active, and requested a normal Pi reboot. Closed SSH immediately afterwards.
+- Polled certificate-validated `https://raspberrypi:8443` directly over Tailscale,
+  without logging in again until HTTPS, sensor capture and synchronization were
+  ready. Readiness took **37.95 seconds from the reboot request**. This is not a
+  measurement from physical power-on.
+- At readiness, capture reported `running: true`, no error, synchronization
+  locked, sensor-pair p95 delta 19 microseconds and no active recording. The
+  served HTML matched the deployed production build byte-for-byte.
+- A subsequent SSH check confirmed a new kernel boot ID, unchanged calibration
+  and recording-manifest hashes, enabled camera/Web/Tailscale services, and
+  `Linger=yes`. Camera startup needed no retry; Web startup retried once while
+  the Tailscale interface became available. Both services were active.
+- After reboot, a 10-second diagnostic with both SDP directions restricted to
+  Tailscale candidates decoded **194 H.264 frames** at 1440 × 540 and received
+  **299 diagnostic messages**. PTS increased; synchronization remained locked
+  with p95 delta 118 microseconds at sample end. The session was released and no
+  recording was created. Restored the Mac tunnel after the standalone check.
+- In the desktop in-app browser, `http://localhost:5173/?view=live` automatically
+  connected to the real Pi stream and displayed **LIVE · Synced**, without
+  pressing a preview button. Closing live preview returned to the sample editor
+  without reopening the stream. This validates the automatic UI path, not
+  physical iPad Safari autoplay or performance.
+- Seven device API tests passed, including startup capture without recording,
+  cleanup on startup failure and preservation of on-demand mode. TypeScript,
+  the production build, 12 Web tests and 7 workbench-server tests passed.
+
+The Pi now starts capture before a browser connects. Opening its HTTPS
+workbench starts live preview automatically once the device and renderer are
+ready; `?view=editor` opts out. An already-open browser's recovery across a Pi
+reboot is separate from this first-visit startup result. Muted inline autoplay
+is requested, but restrictive browser settings may still require a tap.
 
 ## Reproduce
 

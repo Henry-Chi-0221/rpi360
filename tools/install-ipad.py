@@ -266,6 +266,11 @@ def install(args):
         raise RuntimeError(
             "Install the camera release and provide --calibration first."
         )
+    help_text = subprocess.check_output([str(executable), "--help"], text=True)
+    if "--auto-capture" not in help_text:
+        raise RuntimeError(
+            "Install a current camera release with --auto-capture support first."
+        )
     if not (web / "index.html").is_file() or not list(web.rglob("*.wasm")):
         raise RuntimeError("Build the workbench first: pnpm wasm && pnpm build")
     # A foreground capture must be stopped deliberately, never killed by port number.
@@ -334,12 +339,14 @@ def install(args):
             "127.0.0.1",
             "--port",
             "8765",
+            "--auto-capture",
         ]
     )
     camera_text = f"""{MARKER}
 [Unit]
 Description=RPI360 camera capture and loopback API
 After=network-online.target
+StartLimitIntervalSec=0
 [Service]
 ExecStart={camera_command}
 Restart=always
@@ -365,6 +372,7 @@ WantedBy=default.target
 [Unit]
 Description=RPI360 Pi HTTPS workbench
 After=network-online.target
+StartLimitIntervalSec=0
 [Service]
 ExecStart={web_command}
 Restart=always
