@@ -46,7 +46,7 @@ export class DeviceClient {
   private connectionHelp() {
     return this.base === "/api"
       ? "Cannot reach the Pi. Start the camera service on the Pi, then run make preview CAMERA=user@raspberrypi.local on this computer. On macOS the services keep running after the terminal closes."
-      : "Cannot reach the camera. Check its address, trusted HTTPS certificate, and that both devices are on the same local network.";
+      : "Cannot reach the camera. Check its address, trusted HTTPS certificate, and that both devices are on the same local network or connected through Tailscale.";
   }
   async connect() {
     const info = await this.request<{ access_mode: "local" | "bearer" }>(

@@ -82,6 +82,49 @@ Keep the preview in the foreground; reopen it after a network interruption.
 Only one live viewer is supported: close a Mac preview before opening the iPad.
 Closing Safari does not stop a recording on the Pi.
 
+## Connect over Tailscale
+
+After installing the workbench, connect the Pi and iPad to the same tailnet and
+turn on MagicDNS. On the Pi, from the repository root, run:
+
+```sh
+make tailscale
+```
+
+Open **https://raspberrypi:8443/** on the iPad, then **Open live preview**. Use your
+Pi's actual Tailscale node name if it differs. The command also prints its
+`https://100.x.y.z:8443/` fallback and adds both links to the certificate setup
+page at `http://100.x.y.z:8080/`. A Mac, SSH tunnel, subnet router and exit node
+are not required. The two devices can be on different physical networks.
+
+This adds the Pi's short MagicDNS name and Tailscale IPs to
+the gateway's certificates and origin checks, admits Tailscale overlay peers,
+and enables its Tailscale IPv6 listener. The existing LAN addresses still work.
+Only the Web service restarts; capture and recordings continue. Later `make ipad`
+updates preserve this opt-in configuration. Rerun `make tailscale` if the Pi is
+renamed or re-registered in Tailscale. Tailscale must run on the Pi at boot.
+
+**Certificate trust:** the short name and IP use the same private Pi CA as the
+LAN address. If that CA is already fully trusted on the iPad, nothing needs to
+be reinstalled. Otherwise follow the first-visit steps using the Tailscale setup
+URL. [Tailscale's public HTTPS certificates](https://tailscale.com/docs/how-to/set-up-https-certificates)
+cover the full `.ts.net` name, not a bare name such as `raspberrypi`; this setup
+uses Caddy's private CA deliberately so the requested short HTTPS address works.
+The full `.ts.net` HTTPS URL is not configured by this private-CA mode.
+Do not bypass a certificate warning.
+
+The tailnet is a trusted camera network: reachable peers can operate the camera
+and access recordings. RPI360 does not change Tailscale ACLs/grants, enable
+Funnel or expose a public service. Use Tailscale access rules to restrict which
+devices may reach the Pi. WebRTC also needs UDP connectivity to the Pi, beyond
+TCP 8443 used by the workbench/API. Keep Tailscale's normal host firewall rules.
+
+If the short name fails, check that MagicDNS and Tailscale DNS are enabled on the
+iPad, then try the printed Tailscale IP. If the page opens but video does not,
+close any other preview and check UDP access. To verify media with **only**
+Tailscale ICE candidates (no silent LAN fallback), run the
+[diagnostic](../validation/ipad-preview.md#reproduce) with `--tailscale-only`.
+
 ## Service management
 
 ```sh

@@ -77,11 +77,67 @@ def get_caddy(base):
     return binary
 
 
-def render_config(template, *, base, release, host, interface):
+TAILSCALE_NETWORKS = (
+    ipaddress.ip_network("100.64.0.0/10"),
+    ipaddress.ip_network("fd7a:115c:a1e0::/48"),
+)
+
+
+def tailscale_info(status=None):
+    """Read only the current node identity; never change tailnet ACLs or DNS."""
+    if status is None:
+        status = json.loads(subprocess.check_output(["tailscale", "status", "--json"]))
+    if status.get("BackendState") != "Running":
+        raise RuntimeError(
+            "Connect this Pi to Tailscale before running make tailscale."
+        )
+    node = status.get("Self", {})
+    dns_name = node.get("DNSName", "").rstrip(".").lower()
+    label = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+    if not re.fullmatch(rf"{label}(?:\.{label})+\.ts\.net", dns_name):
+        raise RuntimeError("Tailscale did not report a valid node DNS name.")
+    ips = [ipaddress.ip_address(value) for value in node.get("TailscaleIPs", [])]
+    if (
+        not ips
+        or not any(ip.version == 4 for ip in ips)
+        or any(
+            not any(
+                ip.version == net.version and ip in net for net in TAILSCALE_NETWORKS
+            )
+            for ip in ips
+        )
+    ):
+        raise RuntimeError("Tailscale did not report valid overlay addresses.")
+    if not status.get("CurrentTailnet", {}).get("MagicDNSEnabled"):
+        raise RuntimeError(
+            "Enable MagicDNS in your tailnet to use the short camera name."
+        )
+    return {"dns_name": dns_name, "ips": [str(ip) for ip in ips]}
+
+
+def url_host(host):
+    return f"[{host}]" if ":" in host else host
+
+
+def render_config(template, *, base, release, host, interface, tailscale=None):
+    hosts = [host, str(interface.ip)]
+    peers = [str(interface.network), "127.0.0.0/8", "::1"]
+    binds = ["0.0.0.0"]
+    if tailscale:
+        # Caddy delegates *.ts.net certificates to tailscaled even with tls
+        # internal. This mode deliberately serves short names and overlay IPs
+        # under the existing private CA, without requiring tailnet HTTPS setup.
+        hosts += [tailscale["dns_name"].split(".")[0]]
+        hosts += tailscale["ips"]
+        peers += [str(net) for net in TAILSCALE_NETWORKS]
+        binds += [url_host(ip) for ip in tailscale["ips"] if ":" in ip]
+    hosts = list(dict.fromkeys(url_host(h) for h in hosts))
     values = {
-        "HOST": host,
-        "IP": str(interface.ip),
-        "SUBNET": str(interface.network),
+        "HTTPS_SITES": ", ".join(f"https://{h}:8443" for h in hosts),
+        "HTTP_SITES": ", ".join(f"http://{h}:8080" for h in hosts),
+        "ORIGINS": "\n".join(f"\t\t\t\theader Origin https://{h}:8443" for h in hosts),
+        "PEER_NETWORKS": " ".join(peers),
+        "BIND_HOSTS": " ".join(binds),
         "STORAGE": json.dumps(str(base / "pki")),
         "WEB": json.dumps(str(release / "web")),
         "SETUP": json.dumps(str(base / "setup")),
@@ -89,6 +145,84 @@ def render_config(template, *, base, release, host, interface):
     for key, value in values.items():
         template = template.replace(f"@@{key}@@", value)
     return template
+
+
+def setup_page(host, ip, fingerprint, tailscale=None):
+    page = (ROOT / "deploy/raspberry-pi/ipad/index.html").read_text()
+    links = ""
+    if tailscale:
+        name = tailscale["dns_name"].split(".")[0]
+        address = next(ip for ip in tailscale["ips"] if ":" not in ip)
+        links = (
+            "<h2>Over Tailscale</h2><p>Connect this iPad and Pi to your tailnet. "
+            "The same Pi certificate works on both networks.</p>"
+            f'<p><a class="button" href="https://{name}:8443/">'
+            f"Open {name} over Tailscale</a></p>"
+            f'<p>IP fallback: <a href="https://{address}:8443/">{address}</a>.</p>'
+        )
+    for key, value in {
+        "HOST": host,
+        "IP": ip,
+        "FINGERPRINT": fingerprint,
+        "TAILSCALE_LINKS": links,
+    }.items():
+        page = page.replace(f"@@{key}@@", value)
+    return page
+
+
+def configure_tailscale():
+    """Add the overlay to an installed gateway; leave capture and data untouched."""
+    lan = Path.home() / ".local/share/rpi360/lan"
+    metadata = lan / "deployment.json"
+    if not metadata.is_file():
+        raise RuntimeError("Install the Pi workbench with make ipad first.")
+    unit = Path.home() / ".config/systemd/user/rpi360-web.service"
+    if not unit.exists() or MARKER not in unit.read_text():
+        raise RuntimeError("The existing Web service is not managed by RPI360.")
+    data = json.loads(metadata.read_text())
+    overlay = tailscale_info()
+    config = lan / "Caddyfile"
+    setup = lan / "setup/index.html"
+    previous = {p: p.read_text() for p in [config, setup, metadata]}
+    candidate = lan / "Caddyfile.candidate"
+    candidate.write_text(
+        render_config(
+            (ROOT / "deploy/raspberry-pi/ipad/Caddyfile.template").read_text(),
+            base=lan,
+            release=lan / "releases" / data["web_release"],
+            host=data["host"],
+            interface=ipaddress.ip_interface(data["address"]),
+            tailscale=overlay,
+        )
+    )
+    binary = get_caddy(lan)
+    run(str(binary), "validate", "--config", str(candidate), "--adapter", "caddyfile")
+    ca = lan / "setup/rpi360-ca.crt"
+    context = ssl.create_default_context(cafile=str(ca))
+    address = next(ip for ip in overlay["ips"] if ":" not in ip)
+    try:
+        atomic(config, candidate.read_text())
+        run("systemctl", "--user", "restart", "rpi360-web")
+        wait_url(f"https://{address}:8443/", context=context)
+        wait_url(f"https://{address}:8443/v1/capabilities", context=context)
+        data["tailscale"] = overlay
+        atomic(
+            setup,
+            setup_page(
+                data["host"], data["address"].split("/")[0], data["ca_sha256"], overlay
+            ),
+        )
+        atomic(metadata, json.dumps(data, indent=2) + "\n")
+    except Exception:
+        for path, content in previous.items():
+            atomic(path, content)
+        run("systemctl", "--user", "restart", "rpi360-web")
+        raise
+    name = overlay["dns_name"].split(".")[0]
+    print(f"Tailscale preview ready: https://{name}:8443/")
+    print(f"IP fallback: https://{address}:8443/")
+    print(f"First iPad visit: http://{address}:8080/")
+    print("Uses the same Pi CA. Camera process, recordings and tailnet ACLs unchanged.")
 
 
 def wait_url(url, *, context=None, timeout=45):
@@ -119,6 +253,9 @@ def install(args):
     home = Path.home()
     base = home / ".local/share/rpi360"
     lan = base / "lan"
+    metadata = lan / "deployment.json"
+    old_deployment = json.loads(metadata.read_text()) if metadata.is_file() else {}
+    overlay = tailscale_info() if old_deployment.get("tailscale") else None
     data = Path(
         args.data_dir or os.environ.get("RPI360_DATA_DIR", base / "data")
     ).resolve()
@@ -167,7 +304,12 @@ def install(args):
     candidate = lan / "Caddyfile.candidate"
     candidate.write_text(
         render_config(
-            template, base=lan, release=release, host=host, interface=interface
+            template,
+            base=lan,
+            release=release,
+            host=host,
+            interface=interface,
+            tailscale=overlay,
         )
     )
     run(str(binary), "validate", "--config", str(candidate), "--adapter", "caddyfile")
@@ -261,14 +403,10 @@ WantedBy=default.target
         fingerprint = ":".join(
             fingerprint[i : i + 2] for i in range(0, len(fingerprint), 2)
         )
-        page = (ROOT / "deploy/raspberry-pi/ipad/index.html").read_text()
-        for key, value in {
-            "HOST": host,
-            "IP": str(interface.ip),
-            "FINGERPRINT": fingerprint,
-        }.items():
-            page = page.replace(f"@@{key}@@", value)
-        atomic(lan / "setup/index.html", page)
+        atomic(
+            lan / "setup/index.html",
+            setup_page(host, str(interface.ip), fingerprint, overlay),
+        )
         atomic(
             lan / "deployment.json",
             json.dumps(
@@ -278,6 +416,7 @@ WantedBy=default.target
                     "web_release": release.name,
                     "data_dir": str(data),
                     "ca_sha256": fingerprint,
+                    "tailscale": overlay,
                 },
                 indent=2,
             )
@@ -326,7 +465,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--address", help="Private LAN IPv4/prefix, e.g. 192.168.1.20/24"
     )
+    parser.add_argument(
+        "--configure-tailscale",
+        action="store_true",
+        help="Add Tailscale to an existing gateway without restarting capture",
+    )
     try:
-        install(parser.parse_args())
+        args = parser.parse_args()
+        if args.configure_tailscale:
+            configure_tailscale()
+        else:
+            install(args)
     except (RuntimeError, subprocess.CalledProcessError, OSError) as error:
         raise SystemExit(f"iPad setup failed: {error}") from error

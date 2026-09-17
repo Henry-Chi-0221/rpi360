@@ -1,4 +1,4 @@
-.PHONY: setup core wasm web check test demos connect preview preview-status preview-stop camera ipad
+.PHONY: setup core wasm web check test demos connect preview preview-status preview-stop camera ipad tailscale
 setup:
 	uv sync --all-packages --extra dev
 	pnpm install
@@ -30,3 +30,5 @@ camera:
 	bash tools/run-camera.sh "$(CALIBRATION)"
 ipad:
 	python3 tools/install-ipad.py $(if $(CALIBRATION),--calibration "$(CALIBRATION)")
+tailscale:
+	python3 tools/install-ipad.py --configure-tailscale

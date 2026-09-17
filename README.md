@@ -184,6 +184,8 @@ make ipad CALIBRATION=/path/to/your/calibration.json
 
 Open the printed setup URL in iPad Safari and trust this Pi's HTTPS certificate
 once. Then use **https://raspberrypi.local:8443 → Open live preview**.
+For Tailscale, run `make tailscale` on the Pi and open
+**https://raspberrypi:8443/**. It uses the same trusted Pi certificate.
 The Pi services start at boot; no Mac, open terminal, pairing code or cloud account
 is needed. This mode shares camera access with devices on your trusted local
 subnet. FOV and orientation render on the iPad. `localhost:5173` remains the

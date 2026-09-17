@@ -65,6 +65,34 @@ Pi and compared byte-for-byte through certificate-validated HTTPS. Only the Web
 service restarted; the camera process PID was unchanged. TypeScript, the
 production build, 12 Web tests and 7 workbench-server tests passed.
 
+## Tailscale follow-up
+
+Executed on 2026-09-17 with Pi and Mac connected to the same tailnet. The iPad
+was visible as an online peer; its browser was not operated by this diagnostic.
+
+- `https://raspberrypi:8443`, the Pi's Tailscale IPv4 and IPv6 addresses, and its
+  original LAN address returned HTTP 200 with CA and hostname/IP verification.
+- The short-name origin could access the API. Untrusted origins returned 403.
+  The HTTP setup page contained working Tailscale links and only the public CA.
+- With **both SDP offers and answers limited to Tailscale ICE candidates**, a
+  12-second run decoded 217 H.264 frames at 1440 × 540 and received 359 frame
+  diagnostics. Video PTS were monotonic; sensor sync was locked. This rules out
+  silent LAN media fallback, but is not an off-site latency or Safari test.
+- The test session was released. No source recording was created or changed.
+- The camera PID and Pi CA fingerprint were unchanged after gateway/Web updates.
+- Gateway tests cover LAN-only and opt-in tailnet modes, real TLS for the short
+  name, allowed and rejected peer sources, origin/Host checks, Range transfers,
+  the certificate-only HTTP port and dual-stack listeners: 13 passed, with the
+  tailnet-alias case intentionally skipped in LAN-only mode.
+- TypeScript, production build, 12 Web tests and 7 workbench-server tests passed.
+
+Debian Caddy 2.6 attempted overlapping IPv4/IPv6 QUIC UDP listeners during the
+first deployment. Readiness failed and restored the previous configuration.
+The gateway now explicitly uses HTTP/1.1 and HTTP/2; WebRTC video retains its
+separate UDP transport. The dual-stack gateway test covers this startup case.
+Caddy's automatic `*.ts.net` certificate delegation is not used: this mode
+serves the short MagicDNS name and overlay IPs with the existing private Pi CA.
+
 ## Reproduce
 
 On a development machine with `httpx` and `aiortc`, use the public CA certificate
@@ -75,6 +103,10 @@ uv run --all-packages python tools/diagnostics/check-ipad.py \
   --url https://raspberrypi.local:8443 --ca /path/to/rpi360-ca.crt \
   --seconds 12 --output /path/to/result.json
 ```
+
+For a Tailscale-only media check, use the short HTTPS address and add
+`--tailscale-only`. The diagnostic rejects a client or Pi with no overlay ICE
+candidate and excludes all LAN candidates from the offer and answer.
 
 Close any other live preview first. The diagnostic opens capture/preview only,
 leaves recordings alone and releases its preview session when finished.

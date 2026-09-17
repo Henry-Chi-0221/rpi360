@@ -7,6 +7,7 @@ Requires httpx and aiortc (available in the repository's development environment
 import argparse
 import asyncio
 import contextlib
+import ipaddress
 import json
 import ssl
 import time
@@ -19,6 +20,29 @@ from aiortc import (
     RTCRtpReceiver,
     RTCSessionDescription,
 )
+
+
+def overlay_sdp(sdp):
+    """Force this diagnostic's ICE candidates onto Tailscale, never LAN fallback."""
+    networks = [
+        ipaddress.ip_network("100.64.0.0/10"),
+        ipaddress.ip_network("fd7a:115c:a1e0::/48"),
+    ]
+    lines, addresses = [], set()
+    for line in sdp.splitlines():
+        if line.startswith("a=candidate:"):
+            address = ipaddress.ip_address(line.split()[4])
+            if not any(
+                address.version == net.version and address in net for net in networks
+            ):
+                continue
+            addresses.add(str(address))
+        lines.append(line)
+    if not addresses:
+        raise RuntimeError(
+            "No Tailscale ICE candidate. Connect the client/Pi to Tailscale first."
+        )
+    return "\r\n".join(lines) + "\r\n", sorted(addresses)
 
 
 async def check(args):
@@ -63,18 +87,25 @@ async def check(args):
             response.raise_for_status()
             capabilities = response.json()
             await pc.setLocalDescription(await pc.createOffer())
+            offer_sdp = pc.localDescription.sdp
+            local_overlay, remote_overlay = [], []
+            if args.tailscale_only:
+                offer_sdp, local_overlay = overlay_sdp(offer_sdp)
             response = await client.post(
                 "/v1/preview-sessions",
                 json={
                     "type": pc.localDescription.type,
-                    "sdp": pc.localDescription.sdp,
+                    "sdp": offer_sdp,
                 },
             )
             response.raise_for_status()
             session = response.json()
+            answer_sdp = session["sdp"]
+            if args.tailscale_only:
+                answer_sdp, remote_overlay = overlay_sdp(answer_sdp)
             await pc.setRemoteDescription(
                 RTCSessionDescription(
-                    sdp=session["sdp"],
+                    sdp=answer_sdp,
                     type=session["type"],
                 )
             )
@@ -92,6 +123,9 @@ async def check(args):
             result = {
                 "url": args.url,
                 "tls_verified": True,
+                "tailscale_only": args.tailscale_only,
+                "local_overlay_candidates": local_overlay,
+                "remote_overlay_candidates": remote_overlay,
                 "seconds": args.seconds,
                 "frames_decoded": frames,
                 "dimensions": sorted(dimensions),
@@ -116,6 +150,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", required=True)
     parser.add_argument("--ca", type=Path, required=True)
+    parser.add_argument(
+        "--tailscale-only",
+        action="store_true",
+        help="Exclude LAN candidates from the offer and answer",
+    )
     parser.add_argument("--seconds", type=int, default=10)
     parser.add_argument("--output", type=Path)
     asyncio.run(check(parser.parse_args()))

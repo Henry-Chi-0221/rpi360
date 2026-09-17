@@ -17,7 +17,7 @@
 <p class="muted">RPI360 / Camera workbench</p>
 <h1>Your iPad is the viewfinder.</h1>
 <p>This page comes directly from your Raspberry Pi. Connect both devices to the
-same trusted Wi-Fi network. No Mac, app account or pairing code is needed.</p>
+same trusted Wi-Fi network, or use the configured Tailscale connection. No Mac, app account or pairing code is needed.</p>
 <h2>First visit: trust your camera</h2>
 <p>Safari needs a trusted HTTPS connection for the GPU preview. This is a one-time
 setup for this Pi, not a code you enter every time.</p>
@@ -31,6 +31,7 @@ setup for this Pi, not a code you enter every time.</p>
   Turn on full trust for <strong>RPI360 camera</strong>.</li>
 </ol>
 <p><a href="https://support.apple.com/102390">Apple's certificate trust instructions</a></p>
+@@TAILSCALE_LINKS@@
 <h2>Open live preview</h2>
 <p><a class="button" href="https://@@HOST@@:8443/">Open camera workbench</a></p>
 <p>If the hostname does not resolve, use <a href="https://@@IP@@:8443/">@@IP@@</a>.</p>
@@ -41,7 +42,7 @@ iPad renders the view. Close any other active preview first.</p>
 Keep it in the foreground while previewing. Recording continues on the Pi when
 you close the page.</p>
 <h2>About this connection</h2>
-<p>This simple mode gives devices on your camera's local subnet access to its
+<p>This simple mode gives devices on your camera's configured LAN or tailnet access to its
 controls and recordings. Use a trusted private network.</p>
 <p class="muted">Only install your own Pi's certificate. Compare this SHA-256
 fingerprint with the installer output on the Pi:</p>

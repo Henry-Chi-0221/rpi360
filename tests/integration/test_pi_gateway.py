@@ -32,8 +32,9 @@ def free_port():
         return sock.getsockname()[1]
 
 
-@pytest.fixture(scope="module")
-def gateway(tmp_path_factory):
+@pytest.fixture(scope="module", params=[False, True], ids=["lan", "tailnet"])
+def gateway(tmp_path_factory, request):
+    overlay_enabled = request.param
     base = tmp_path_factory.mktemp("gateway")
     (base / "web").mkdir()
     (base / "setup").mkdir()
@@ -67,6 +68,12 @@ def gateway(tmp_path_factory):
             release=base,
             host="camera.local",
             interface=ipaddress.ip_interface("127.0.0.1/8"),
+            tailscale={
+                "dns_name": "camera.test-tailnet.ts.net",
+                "ips": ["100.85.1.2", "fd7a:115c:a1e0::1234"],
+            }
+            if overlay_enabled
+            else None,
         )
         .replace(":8443", f":{https_port}")
         .replace(":8080", f":{http_port}")
@@ -75,6 +82,9 @@ def gateway(tmp_path_factory):
     # Two loopback source addresses exercise the real peer-subnet gate without
     # privileged network namespaces, Docker NAT or spoofable forwarded headers.
     config = config.replace("127.0.0.0/8", "127.0.0.1/32")
+    config = config.replace("100.64.0.0/10", "127.0.0.3/32")
+    # Exercise dual-stack listeners without assigning a real overlay address.
+    config = config.replace("bind 0.0.0.0 [fd7a:115c:a1e0::1234]", "bind 0.0.0.0 [::1]")
     (base / "Caddyfile").write_text(config)
     with (base / "caddy.log").open("w") as log:
         process = subprocess.Popen(
@@ -101,16 +111,34 @@ def gateway(tmp_path_factory):
             url = f"https://127.0.0.1:{https_port}"
             module["wait_url"](url, context=context, timeout=10)
 
-            def request(path, *, headers=None, method="GET", plain=False, source=None):
-                if source:
+            def request(
+                path,
+                *,
+                headers=None,
+                method="GET",
+                plain=False,
+                source=None,
+                tls_name=None,
+            ):
+                if source or tls_name:
                     connection = http.client.HTTPSConnection(
-                        "127.0.0.1",
+                        tls_name or "127.0.0.1",
                         https_port,
                         context=context,
-                        source_address=(source, 0),
+                        source_address=(source or "127.0.0.1", 0),
                         timeout=5,
                     )
                     try:
+                        # Route to the temporary listener while still verifying
+                        # the requested hostname in its real TLS certificate.
+                        connection.sock = context.wrap_socket(
+                            socket.create_connection(
+                                ("127.0.0.1", https_port),
+                                timeout=5,
+                                source_address=(source or "127.0.0.1", 0),
+                            ),
+                            server_hostname=tls_name or "127.0.0.1",
+                        )
                         connection.request(method, path, headers=headers or {})
                         response = connection.getresponse()
                         return response.status, response.headers, response.read()
@@ -126,6 +154,8 @@ def gateway(tmp_path_factory):
                 except urllib.error.HTTPError as error:
                     return error.code, error.headers, error.read()
 
+            request.overlay_enabled = overlay_enabled
+            request.https_port = https_port
             yield request, received, url
         finally:
             process.terminate()
@@ -207,3 +237,41 @@ def test_other_peer_subnet_cannot_spoof_a_local_forwarded_address(gateway):
         == 403
     )
     assert len(received) == count
+
+
+def test_tailnet_peer_admission_is_opt_in(gateway):
+    request, received, _ = gateway
+    count = len(received)
+    code, _, _ = request("/v1/info", source="127.0.0.3")
+    assert code == (200 if request.overlay_enabled else 403)
+    assert len(received) == count + int(request.overlay_enabled)
+
+
+def test_tailnet_alias_certificates_and_same_origin_controls(gateway):
+    request, _, _ = gateway
+    if not request.overlay_enabled:
+        pytest.skip("Alias certificates only exist in tailnet mode")
+    # Verify the short-name certificate on a loopback connection. IP-address
+    # SAN validation needs a real overlay listener (covered by the Pi diagnostic)
+    # because Python omits SNI for IP literals; exercise its Host/origin here.
+    for host in ["camera", "100.85.1.2"]:
+        code, _, _ = request(
+            "/v1/info",
+            tls_name="camera",
+            source="127.0.0.3",
+            headers={
+                "Host": f"{host}:{request.https_port}",
+                "Origin": f"https://{host}:{request.https_port}",
+            },
+        )
+        assert code == 200
+        assert (
+            request(
+                "/v1/capture/start",
+                tls_name="camera",
+                source="127.0.0.3",
+                headers={"Origin": "https://other-tailnet.ts.net"},
+                method="POST",
+            )[0]
+            == 403
+        )

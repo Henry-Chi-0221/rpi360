@@ -1380,7 +1380,7 @@ export default function App() {
                 <h2>Connect your camera</h2>
                 <p>
                   {directCamera
-                    ? "This workbench connects directly to your Pi. Keep both devices on the same Wi-Fi. No Mac or pairing code is needed."
+                    ? "This workbench connects directly to your Pi. Use the same Wi-Fi or connect both devices through Tailscale. No Mac or pairing code is needed."
                     : "Connect your camera to the local workbench. No pairing code or browser account is needed."}
                 </p>
                 <label>
@@ -1408,7 +1408,7 @@ export default function App() {
                 )}
                 <p className="hint">
                   {directCamera ? (
-                    "Keep the device address above. If the camera is unavailable, check that the Pi is powered on and connected to your Wi-Fi."
+                    "Keep the device address above. If the camera is unavailable, check that the Pi is powered on and reachable on your Wi-Fi or Tailscale network."
                   ) : (
                     <>
                       For the desktop workflow, run{" "}

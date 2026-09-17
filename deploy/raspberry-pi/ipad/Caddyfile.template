@@ -2,6 +2,11 @@
 	admin off
 	auto_https disable_redirects
 	skip_install_trust
+	# WebRTC carries video separately; avoid dual-stack QUIC bind conflicts
+	# in Debian Caddy 2.6 when binding IPv4 plus the Tailscale IPv6 address.
+	servers {
+		protocols h1 h2
+	}
 	storage file_system @@STORAGE@@
 	pki {
 		ca local {
@@ -10,23 +15,22 @@
 	}
 }
 
-(lan_only) {
-	@outside not remote_ip @@SUBNET@@ 127.0.0.0/8 ::1
-	respond @outside "This workbench is available on the camera LAN only." 403
+(trusted_network) {
+	@outside not remote_ip @@PEER_NETWORKS@@
+	respond @outside "This workbench is available on the configured camera networks only." 403
 	header X-Content-Type-Options nosniff
 }
 
-https://@@HOST@@:8443, https://@@IP@@:8443 {
-	bind 0.0.0.0
+@@HTTPS_SITES@@ {
+	bind @@BIND_HOSTS@@
 	tls internal
 	route {
-		import lan_only
+		import trusted_network
 		header X-Frame-Options DENY
 		@bad_origin {
 			header Origin *
 			not {
-				header Origin https://@@HOST@@:8443
-				header Origin https://@@IP@@:8443
+@@ORIGINS@@
 			}
 		}
 		respond @bad_origin "Origin is not allowed." 403
@@ -60,10 +64,10 @@ https://@@HOST@@:8443, https://@@IP@@:8443 {
 }
 
 # Only setup instructions and the public CA certificate are served over HTTP.
-http://@@HOST@@:8080, http://@@IP@@:8080 {
-	bind 0.0.0.0
+@@HTTP_SITES@@ {
+	bind @@BIND_HOSTS@@
 	route {
-		import lan_only
+		import trusted_network
 		@setup path / /index.html /rpi360-ca.crt
 		handle @setup {
 			root * @@SETUP@@
@@ -77,6 +81,6 @@ http://@@HOST@@:8080, http://@@IP@@:8080 {
 }
 
 https://:8443, http://:8080 {
-	bind 0.0.0.0
+	bind @@BIND_HOSTS@@
 	respond "Unknown camera hostname." 421
 }
