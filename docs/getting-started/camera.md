@@ -80,7 +80,7 @@ On other platforms, or with `node tools/preview.mjs --foreground user@raspberryp
 the launcher stays in the foreground. Keep that terminal open. macOS background
 service management is the tested persistent path in this alpha.
 
-Open **http://localhost:5173 → Camera → Open live preview**. The camera connects
+Open **http://localhost:5173 → Open live preview**. The camera connects
 automatically. Wait for **LIVE · Synced**, then drag to look around or adjust FOV,
 yaw, pitch and roll. No Connect dialog is required for the standard setup.
 

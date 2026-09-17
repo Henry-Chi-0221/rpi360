@@ -64,13 +64,17 @@ camera releases and the Mac preview launcher are preserved.
    trust for that certificate. This is required separately by
    [iPadOS](https://support.apple.com/102390).
 5. Return to Safari and open `https://raspberrypi.local:8443`. Choose
-   **Camera → Open live preview**. Wait for **LIVE · Synced**.
+   the **Open live preview** button at the top. Wait for **LIVE · Synced**.
 
 The certificate trust step happens once per Pi/iPad. It enables Safari's secure
 browser features; it is not a recurring pairing flow. The setup page shows the
 public certificate fingerprint, also printed on the Pi. The CA private key stays
 in the Pi's private application directory and is never served or copied to Git.
 The HTTP setup port cannot access the API, workbench or recordings.
+
+The preview button stays visible on phones, iPad portrait and Split View. The
+**Camera** tab below it opens recording controls and the on-camera file list;
+**Library** and **Effects** open their own panels. Close a panel with **Close**.
 
 Drag to look around, use the Field of view slider to zoom, and select Source,
 Panorama or Reframe. Bookmark the HTTPS address or add it to the Home Screen.

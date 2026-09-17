@@ -39,6 +39,32 @@ the Pi-side deployment path, not Safari's decoding/rendering performance.
 Crash tests were performed with no active recording. Boot configuration was
 checked; a physical Pi reboot/power-cut test was not performed this round.
 
+## Responsive navigation follow-up
+
+The previous layout hid the library/camera sidebar below 850 px and the icon
+rail below 600 px, leaving phone users without a preview entrance. The updated
+workbench keeps **Open live preview** in the header and provides **Camera**,
+**Library**, **Effects** and **Export** navigation at narrow widths. Camera
+controls open in a scrollable panel with a visible Close button.
+
+Executed with desktop Chrome at 390 × 844 and 834 × 1194 CSS pixels:
+
+- Opened the real Pi stream from the header; observed decoded camera video and
+  **LIVE · Synced**, then closed and reopened the preview successfully.
+- Adjusted FOV from 90° to 110° while the live session remained active.
+- Checked the Camera panel and phone Effects navigation. Recording controls
+  remain visible in live mode; the editing timeline and keyframe/effect hints
+  are hidden until preview closes.
+- Released the test preview afterwards so it does not occupy the single viewer
+  slot. No recording was created by these UI checks.
+
+This browser UI check used the existing localhost camera proxy. It supplements,
+rather than replaces, the direct Pi HTTPS/media test above and is **not a
+physical iPad/Safari test**. The same built HTML, JS and CSS were deployed to the
+Pi and compared byte-for-byte through certificate-validated HTTPS. Only the Web
+service restarted; the camera process PID was unchanged. TypeScript, the
+production build, 12 Web tests and 7 workbench-server tests passed.
+
 ## Reproduce
 
 On a development machine with `httpx` and `aiortc`, use the public CA certificate

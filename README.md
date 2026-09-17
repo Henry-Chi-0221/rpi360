@@ -161,7 +161,7 @@ Run `make preview` again to start/update using the saved camera address. If a
 foreground `pnpm dev` is using port 5173, stop it first. Other platforms currently
 use the foreground launcher and must keep its terminal open.
 
-Open **http://localhost:5173 → Camera → Open live preview**. The workspace
+Open **http://localhost:5173 → Open live preview**. The workspace
 connects automatically. Wait for **LIVE · Synced**, then drag the image or adjust
 **Field of view**, **Yaw**, **Pitch** and **Roll**. New tabs work the same way;
 close an active preview before opening another (one video viewer at a time).
@@ -183,7 +183,7 @@ make ipad CALIBRATION=/path/to/your/calibration.json
 ```
 
 Open the printed setup URL in iPad Safari and trust this Pi's HTTPS certificate
-once. Then use **https://raspberrypi.local:8443 → Camera → Open live preview**.
+once. Then use **https://raspberrypi.local:8443 → Open live preview**.
 The Pi services start at boot; no Mac, open terminal, pairing code or cloud account
 is needed. This mode shares camera access with devices on your trusted local
 subnet. FOV and orientation render on the iPad. `localhost:5173` remains the

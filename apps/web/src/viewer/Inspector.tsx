@@ -2,6 +2,7 @@ import { Aperture, ArrowUpRight, Globe2, RotateCcw } from "lucide-react";
 import type { ViewState } from "@rpi360/web-sdk";
 import type { Preset } from "../editor/presets";
 interface Props {
+  live: boolean;
   view: ViewState;
   angles: number[];
   ratio: string;
@@ -19,6 +20,7 @@ interface Props {
   onAlignment(value: string): void;
 }
 export function Inspector({
+  live,
   view,
   angles,
   ratio,
@@ -101,9 +103,11 @@ export function Inspector({
           </label>
         ))}
       </div>
-      <p className="hint">
-        Adjust your view, then add a keyframe to save the camera position.
-      </p>
+      {!live && (
+        <p className="hint">
+          Adjust your view, then add a keyframe to save the camera position.
+        </p>
+      )}
       <div className="divider" />
       <div className="field-label">Canvas ratio</div>
       <div className="ratios">
@@ -118,29 +122,33 @@ export function Inspector({
           </button>
         ))}
       </div>
-      <div className="divider" />
-      <div className="field-label">
-        Quick effects{" "}
-        <button className="text-link" onClick={() => onEffects()}>
-          View all <ArrowUpRight size={12} />
-        </button>
-      </div>
-      <div className="quick-effects">
-        <button
-          className={effect === "reframe" ? "selected" : ""}
-          onClick={() => onEffect("reframe")}
-        >
-          <Aperture size={18} />
-          Reframe
-        </button>
-        <button
-          className={effect === "planet" ? "selected" : ""}
-          onClick={() => onEffect("planet")}
-        >
-          <Globe2 size={18} />
-          Tiny Planet
-        </button>
-      </div>
+      {!live && (
+        <>
+          <div className="divider" />
+          <div className="field-label">
+            Quick effects{" "}
+            <button className="text-link" onClick={() => onEffects()}>
+              View all <ArrowUpRight size={12} />
+            </button>
+          </div>
+          <div className="quick-effects">
+            <button
+              className={effect === "reframe" ? "selected" : ""}
+              onClick={() => onEffect("reframe")}
+            >
+              <Aperture size={18} />
+              Reframe
+            </button>
+            <button
+              className={effect === "planet" ? "selected" : ""}
+              onClick={() => onEffect("planet")}
+            >
+              <Globe2 size={18} />
+              Tiny Planet
+            </button>
+          </div>
+        </>
+      )}
       {unknownAlignment && (
         <div className="alignment">
           <label>

@@ -99,7 +99,13 @@ export default function App() {
     [spherical, setSpherical] = useState(false),
     [ratio, setRatio] = useState("16:9"),
     [effect, setEffect] = useState<Preset>("reframe"),
-    [tab, setTab] = useState("library");
+    [tab, setTab] = useState("library"),
+    [panelOpen, setPanelOpen] = useState(false),
+    [liveBusy, setLiveBusy] = useState(false);
+  const livePending = useRef(false);
+  const directCamera =
+    location.protocol === "https:" &&
+    !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
   const [message, setMessage] = useState("Loading the shared renderer…"),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -132,6 +138,26 @@ export default function App() {
     setLoading(false);
     setPlaying(false);
   };
+  function openPanel(next: string) {
+    setTab(next);
+    setPanelOpen(window.matchMedia("(max-width: 850px)").matches);
+    if (next === "device") void refreshRemote().catch(fail);
+  }
+  useEffect(() => {
+    const layout = window.matchMedia("(max-width: 850px)");
+    const changed = () => {
+      if (!layout.matches) setPanelOpen(false);
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPanelOpen(false);
+    };
+    layout.addEventListener("change", changed);
+    window.addEventListener("keydown", key);
+    return () => {
+      layout.removeEventListener("change", changed);
+      window.removeEventListener("keydown", key);
+    };
+  }, []);
   function updateProject(p: EditProject) {
     projectRef.current = p;
     setProject(p);
@@ -190,6 +216,7 @@ export default function App() {
       s.dispose();
       return;
     }
+    setPanelOpen(false);
     setPlaying(false);
     setError("");
     setLoading(true);
@@ -500,30 +527,34 @@ export default function App() {
     if (client) setRemote((await client.request("/v1/recordings")).items);
   }
   async function startLive() {
-    if (progress !== null) return;
-    if (live.current) {
-      await live.current.close();
-      live.current = null;
-      setLiveOn(false);
-      if (source.current) {
-        renderer.current?.setCalibration(source.current.calibration);
-        setTitle(source.current.id);
-        setSourceKind(
-          source.current instanceof StillSource
-            ? "360 still-frame reframing"
-            : "Recorded dual fisheye",
-        );
-        await frameAt(clock.current);
-      }
-      setMessage("Live preview closed · camera recording is independent");
-      return;
-    }
-    const camera = device ?? (await connect());
-    if (!camera) return;
+    if (progress !== null || livePending.current || loading) return;
+    livePending.current = true;
+    setLiveBusy(true);
+    setPanelOpen(false);
     setError("");
-    setPlaying(false);
-    setLoading(true);
     try {
+      if (live.current) {
+        await live.current.close();
+        live.current = null;
+        setLiveOn(false);
+        if (source.current) {
+          renderer.current?.setCalibration(source.current.calibration);
+          setTitle(source.current.id);
+          setSourceKind(
+            source.current instanceof StillSource
+              ? "360 still-frame reframing"
+              : "Recorded dual fisheye",
+          );
+          await frameAt(clock.current);
+        }
+        setMessage("Live preview closed · camera recording is independent");
+        return;
+      }
+      const camera = device ?? (await connect());
+      if (!camera) return;
+      setError("");
+      setPlaying(false);
+      setLoading(true);
       const c = await camera.request("/v1/calibration");
       if (!c.profile)
         throw new Error(
@@ -533,6 +564,9 @@ export default function App() {
         renderer.current = await Renderer.create(canvas.current!, c.profile);
       else renderer.current.setCalibration(c.profile);
       live.current = await camera.preview(video.current!, setDiagnostics);
+      setMode("view");
+      setRatio("16:9");
+      draw({ ...defaultView });
       setLiveOn(true);
       setTitle("Live camera");
       setSourceKind("Paired fisheye stream");
@@ -540,6 +574,9 @@ export default function App() {
       setLoading(false);
     } catch (e) {
       fail(e);
+    } finally {
+      livePending.current = false;
+      setLiveBusy(false);
     }
   }
   async function record() {
@@ -604,7 +641,7 @@ export default function App() {
   }
   const drag = useRef<{ x: number; y: number; a: number[] } | null>(null);
   return (
-    <div className="app">
+    <div className={"app" + (liveOn ? " is-live" : "")}>
       <aside className="rail">
         <a className="brand" href="/" aria-label="RPI360 home">
           <Aperture size={28} />
@@ -612,24 +649,23 @@ export default function App() {
         <button
           className={tab === "library" ? "active" : ""}
           aria-label="Media library"
-          onClick={() => setTab("library")}
+          onClick={() => openPanel("library")}
         >
           <Layers />
         </button>
         <button
           className={tab === "effects" ? "active" : ""}
           aria-label="Effects"
-          onClick={() => setTab("effects")}
+          disabled={liveOn}
+          title={liveOn ? "Close live preview to edit effects" : undefined}
+          onClick={() => openPanel("effects")}
         >
           <Clapperboard />
         </button>
         <button
           className={tab === "device" ? "active" : ""}
           aria-label="Camera"
-          onClick={() => {
-            setTab("device");
-            void refreshRemote();
-          }}
+          onClick={() => openPanel("device")}
         >
           <Camera />
         </button>
@@ -645,7 +681,35 @@ export default function App() {
         </a>
         <span className="version">v2 α</span>
       </aside>
-      <aside className="library" inert={progress !== null}>
+      {panelOpen && (
+        <button
+          className="panel-backdrop"
+          aria-label="Close workspace panel"
+          onClick={() => setPanelOpen(false)}
+        />
+      )}
+      <aside
+        className={"library" + (panelOpen ? " panel-open" : "")}
+        id="workspace-panel"
+        aria-label="Workspace panel"
+        inert={progress !== null}
+      >
+        <div className="panel-mobile-heading">
+          <strong>
+            {tab === "device"
+              ? "Camera"
+              : tab === "effects"
+                ? "Effects"
+                : "Library"}
+          </strong>
+          <button
+            className="subtle"
+            onClick={() => setPanelOpen(false)}
+            aria-label="Close panel"
+          >
+            <X size={20} /> Close
+          </button>
+        </div>
         <div className="wordmark">
           RPI<span>360</span>
           <small>WORKSPACE</small>
@@ -658,13 +722,15 @@ export default function App() {
                 ? "Camera & files"
                 : "Your library"}
           </h2>
-          <button
-            className="icon"
-            aria-label="Import media"
-            onClick={() => fileInput.current?.click()}
-          >
-            <Plus size={17} />
-          </button>
+          {tab === "library" && (
+            <button
+              className="icon"
+              aria-label="Import media"
+              onClick={() => fileInput.current?.click()}
+            >
+              <Plus size={17} />
+            </button>
+          )}
         </div>
         <input
           hidden
@@ -706,24 +772,27 @@ export default function App() {
                 .catch(fail);
           }}
         />
-        <button className="import" onClick={() => fileInput.current?.click()}>
-          <FolderOpen size={17} />
-          Import recording <Plus size={15} />
-        </button>
-        <button
-          className="text-link"
-          onClick={() => folderInput.current?.click()}
-        >
-          or choose a .r360 folder
-        </button>
-        <button
-          className="text-link project-import"
-          onClick={() => projectInput.current?.click()}
-        >
-          Open edit project
-        </button>
         {tab === "library" && (
           <>
+            <button
+              className="import"
+              onClick={() => fileInput.current?.click()}
+            >
+              <FolderOpen size={17} />
+              Import recording <Plus size={15} />
+            </button>
+            <button
+              className="text-link"
+              onClick={() => folderInput.current?.click()}
+            >
+              or choose a .r360 folder
+            </button>
+            <button
+              className="text-link project-import"
+              onClick={() => projectInput.current?.click()}
+            >
+              Open edit project
+            </button>
             <div className="section-label">
               EXPLORE A PERSPECTIVE <span>03</span>
             </div>
@@ -848,12 +917,24 @@ export default function App() {
               <Wifi size={21} />
               <span>
                 {device ? "Camera connected" : "Connect your camera"}
-                <small>Local network · SSH access</small>
+                <small>
+                  {directCamera
+                    ? "Direct Pi connection"
+                    : "Local network connection"}
+                </small>
               </span>
             </button>
-            <button className="import" onClick={() => void startLive()}>
+            <button
+              className="import"
+              disabled={liveBusy || loading || progress !== null}
+              onClick={() => void startLive()}
+            >
               <Video size={16} />
-              {liveOn ? "Close live preview" : "Open live preview"}
+              {liveBusy
+                ? "Opening camera…"
+                : liveOn
+                  ? "Close live preview"
+                  : "Open live preview"}
             </button>
             <button
               className="import"
@@ -929,7 +1010,8 @@ export default function App() {
       <main>
         <header className="topbar">
           <div className="breadcrumb">
-            Workspace <span>/</span> <strong>Reframe</strong>
+            RPI360 <span>/</span>{" "}
+            <strong>{liveOn ? "Live camera" : "Workspace"}</strong>
           </div>
           <div className="header-actions">
             <button
@@ -940,18 +1022,104 @@ export default function App() {
               {device ? "Camera connected" : "Connect camera"}
             </button>
             <button
-              className="primary"
-              disabled={!project || liveOn || progress !== null}
-              onClick={() => setDialog("export")}
+              className="primary live-preview-action"
+              disabled={liveBusy || loading || progress !== null}
+              onClick={() => void startLive()}
             >
-              <ArrowUpRight size={16} />
-              Export video
+              {liveBusy ? (
+                <LoaderCircle size={18} className="spin" />
+              ) : (
+                <Video size={18} />
+              )}
+              {liveBusy
+                ? "Opening camera…"
+                : liveOn
+                  ? "Close live preview"
+                  : "Open live preview"}
             </button>
+            {!liveOn && (
+              <button
+                className="subtle export-action"
+                disabled={!project || liveBusy || loading || progress !== null}
+                onClick={() => setDialog("export")}
+              >
+                <ArrowUpRight size={16} />
+                Export video
+              </button>
+            )}
           </div>
         </header>
+        <nav className="compact-navigation" aria-label="Workspace navigation">
+          <button
+            onClick={() => openPanel("device")}
+            aria-controls="workspace-panel"
+            aria-expanded={panelOpen && tab === "device"}
+          >
+            <Camera size={18} /> Camera
+          </button>
+          <button
+            onClick={() => openPanel("library")}
+            aria-controls="workspace-panel"
+            aria-expanded={panelOpen && tab === "library"}
+          >
+            <Layers size={18} /> Library
+          </button>
+          <button
+            onClick={() => openPanel("effects")}
+            aria-controls="workspace-panel"
+            aria-expanded={panelOpen && tab === "effects"}
+            disabled={liveOn}
+            title={liveOn ? "Close live preview to edit effects" : undefined}
+          >
+            <Clapperboard size={18} /> Effects
+          </button>
+          <button
+            disabled={
+              !project || liveOn || liveBusy || loading || progress !== null
+            }
+            onClick={() => setDialog("export")}
+            aria-label="Export video"
+          >
+            <ArrowUpRight size={18} /> Export
+          </button>
+        </nav>
+        {error && (
+          <div className="workspace-error" role="alert">
+            <span>{error}</span>
+            <button
+              className="subtle"
+              onClick={() => setError("")}
+              aria-label="Dismiss error"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        {liveOn && (
+          <div className="live-controls">
+            <span>
+              <span className="live-indicator" /> LIVE ·{" "}
+              {status?.sync?.locked ? "Synced" : "Synchronizing"}
+            </span>
+            <button
+              className="subtle"
+              disabled={!device}
+              onClick={() => void record()}
+            >
+              <span
+                className={
+                  status?.recording ? "record-dot recording" : "record-dot"
+                }
+              />
+              {status?.recording ? "Stop recording" : "Start recording"}
+            </button>
+          </div>
+        )}
         <div className="editor-header">
           <div>
-            <div className="eyebrow">A NEW WAY TO SEE</div>
+            <div className="eyebrow">
+              {liveOn ? "YOUR CAMERA, YOUR PERSPECTIVE" : "A NEW WAY TO SEE"}
+            </div>
             <h1>{title}</h1>
             <p>
               {sourceKind} <span>•</span>{" "}
@@ -961,23 +1129,25 @@ export default function App() {
               <span>•</span> Dual fisheye
             </p>
           </div>
-          <button
-            className="subtle"
-            onClick={() => {
-              if (project)
-                void saveProject(project)
-                  .then(() => projects())
-                  .then((p) => {
-                    setSaved(p);
-                    setMessage("Project saved on this device");
-                  })
-                  .catch(fail);
-            }}
-            disabled={!project}
-          >
-            <Save size={15} />
-            Save edit
-          </button>
+          {!liveOn && (
+            <button
+              className="subtle"
+              onClick={() => {
+                if (project)
+                  void saveProject(project)
+                    .then(() => projects())
+                    .then((p) => {
+                      setSaved(p);
+                      setMessage("Project saved on this device");
+                    })
+                    .catch(fail);
+              }}
+              disabled={!project}
+            >
+              <Save size={15} />
+              Save edit
+            </button>
+          )}
         </div>
         <div className="work-area">
           <section className="viewer-area">
@@ -999,6 +1169,7 @@ export default function App() {
               </div>
               <button
                 className="aspect"
+                aria-label="Fullscreen preview"
                 onClick={() =>
                   canvas.current?.parentElement?.requestFullscreen()
                 }
@@ -1068,15 +1239,17 @@ export default function App() {
               {loading && (
                 <div className="loading">
                   <LoaderCircle className="spin" />
-                  Preparing your perspective…
+                  {liveBusy
+                    ? "Connecting to your camera…"
+                    : "Preparing your perspective…"}
                 </div>
               )}
             </div>
             <div className="viewer-caption">
               <span>
                 <Globe2 size={14} />
-                Drag to look around <span className="separator">·</span> Scroll
-                to zoom
+                Drag to look around <span className="separator">·</span> Adjust
+                FOV to zoom
               </span>
               <span>
                 {liveOn ? (
@@ -1091,40 +1264,45 @@ export default function App() {
                 )}
               </span>
             </div>
-            <Timeline
-              project={project}
-              time={time}
-              playing={playing}
-              disabled={liveOn || progress !== null || loading}
-              poster={
-                catalog.some((d) => d.id === active)
-                  ? `/demo/${active}-poster.jpg`
-                  : undefined
-              }
-              onPlay={() => {
-                if (
-                  !playing &&
-                  clock.current >= (project?.duration_us ?? 0) / 1e6
-                )
-                  clock.current = 0;
-                setPlaying(!playing);
-              }}
-              onSeek={(t) => {
-                clock.current = t;
-                setPlaying(false);
-                void frameAt(t).catch(fail);
-              }}
-              onAdd={addKeyframe}
-              onDelete={(t) => {
-                if (project && t !== 0)
-                  updateProject({
-                    ...project,
-                    keyframes: project.keyframes.filter((k) => k.time_us !== t),
-                  });
-              }}
-            />
+            {!liveOn && (
+              <Timeline
+                project={project}
+                time={time}
+                playing={playing}
+                disabled={liveOn || progress !== null || loading}
+                poster={
+                  catalog.some((d) => d.id === active)
+                    ? `/demo/${active}-poster.jpg`
+                    : undefined
+                }
+                onPlay={() => {
+                  if (
+                    !playing &&
+                    clock.current >= (project?.duration_us ?? 0) / 1e6
+                  )
+                    clock.current = 0;
+                  setPlaying(!playing);
+                }}
+                onSeek={(t) => {
+                  clock.current = t;
+                  setPlaying(false);
+                  void frameAt(t).catch(fail);
+                }}
+                onAdd={addKeyframe}
+                onDelete={(t) => {
+                  if (project && t !== 0)
+                    updateProject({
+                      ...project,
+                      keyframes: project.keyframes.filter(
+                        (k) => k.time_us !== t,
+                      ),
+                    });
+                }}
+              />
+            )}
           </section>
           <Inspector
+            live={liveOn}
             view={view}
             angles={angles}
             ratio={ratio}
@@ -1139,7 +1317,7 @@ export default function App() {
             onManual={manual}
             onRatio={setRatio}
             onEffect={applyPreset}
-            onEffects={() => setTab("effects")}
+            onEffects={() => openPanel("effects")}
             onAlignment={(value) => {
               setAlignment(value);
               if (project)
@@ -1201,8 +1379,9 @@ export default function App() {
                 <Wifi className="modal-symbol" />
                 <h2>Connect your camera</h2>
                 <p>
-                  Connect through SSH and open your live camera. No pairing code
-                  or browser account is needed.
+                  {directCamera
+                    ? "This workbench connects directly to your Pi. Keep both devices on the same Wi-Fi. No Mac or pairing code is needed."
+                    : "Connect your camera to the local workbench. No pairing code or browser account is needed."}
                 </p>
                 <label>
                   Device address
@@ -1228,10 +1407,17 @@ export default function App() {
                   </label>
                 )}
                 <p className="hint">
-                  For the default workflow, run{" "}
-                  <code>make preview CAMERA=user@raspberrypi.local</code> from
-                  your checkout. Keep the default device address. On macOS, the
-                  services keep running after the terminal closes.
+                  {directCamera ? (
+                    "Keep the device address above. If the camera is unavailable, check that the Pi is powered on and connected to your Wi-Fi."
+                  ) : (
+                    <>
+                      For the desktop workflow, run{" "}
+                      <code>make preview CAMERA=user@raspberrypi.local</code>{" "}
+                      from your checkout. Keep the default device address. On
+                      macOS, the services keep running after the terminal
+                      closes.
+                    </>
+                  )}
                 </p>
                 <p className="hint">
                   <a
