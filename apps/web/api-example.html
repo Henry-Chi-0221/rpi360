@@ -46,19 +46,11 @@
       running.
     </p>
     <form id="connect">
-      <label
-        >Pairing code
-        <input
-          id="code"
-          inputmode="numeric"
-          maxlength="6"
-          placeholder="Blank to reconnect this tab"
-      /></label>
       <button id="start">Connect preview</button>
       <button id="stop" type="button" disabled>Close preview</button>
     </form>
     <output id="status" role="status"
-      >Run make connect CAMERA=user@raspberrypi.local, then connect.</output
+      >Run make preview CAMERA=user@raspberrypi.local, then connect.</output
     >
     <canvas
       id="view"

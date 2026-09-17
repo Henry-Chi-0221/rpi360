@@ -20,13 +20,14 @@ package consumes the generated XCFramework; do not commit build outputs.
 import Foundation
 import RPI360
 
-let camera = DeviceClient(baseURL: URL(string: "https://camera.local")!)
-try await camera.pair(code: codeFromPi, name: "My iPad")
+// configuredToken comes from the operator of this optional HTTPS deployment.
+let camera = DeviceClient(baseURL: URL(string: "https://camera.local")!, token: configuredToken)
 let status = try await camera.request("/v1/status")
 ```
 
 The camera needs a certificate trusted by the device. The development computer's
 `localhost` SSH tunnel cannot be used from an iPad. See
-[direct HTTPS deployment](../../docs/getting-started/camera.md#trusted-https-deployment).
-One paired controller and one live viewer are currently supported. On-device
+[direct HTTPS deployment](../../docs/getting-started/camera.md#optional-direct-https-deployment).
+On a Mac, use `http://127.0.0.1:8765` through SSH and omit the token.
+There is no pairing or controller registration. One live viewer is supported. On-device
 performance and iPhone/iPad certification remain validation work.

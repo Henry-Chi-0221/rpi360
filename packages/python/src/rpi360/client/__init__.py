@@ -1,4 +1,4 @@
-"""Dependency-free Python client for the authenticated camera API."""
+"""Device API client: SSH by default; optional bearer token for HTTPS."""
 
 import json
 import time
@@ -25,10 +25,6 @@ class DeviceClient:
         )
         with urlopen(request, timeout=30) as response:
             return json.load(response)
-
-    def pair(self, code, name="Python client"):
-        self.token = self.request("/v1/pair", {"code": code, "name": name})["token"]
-        return self.token
 
     def status(self):
         return self.request("/v1/status")

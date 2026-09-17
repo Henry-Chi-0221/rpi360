@@ -122,43 +122,33 @@ No camera, Python server or cloud account is needed.
 
 ## Connect your Pi for live preview
 
-Keep your computer and Pi on the **same local network**. Set up the
-[Pi camera service and your rig's calibration](docs/getting-started/camera.md#1-on-the-pi-install-and-start-the-camera-service)
-first. Leave that service running; it prints the first-time pairing code.
+Keep your computer and Pi on the **same local network**. Complete the
+[one-time Pi setup](docs/getting-started/camera.md#1-on-the-pi) using your rig's
+calibration, and leave `make camera` running on the Pi.
 
-**On your computer, in terminal 1:**
-
-```sh
-make connect CAMERA=YOUR_USER@raspberrypi.local
-```
-
-This opens the SSH tunnel for control and file transfer. Enter your normal SSH
-password if requested, and keep the terminal open. Video travels directly over
-LAN WebRTC; SSH forwards the API, not the video packets.
-
-**On your computer, in terminal 2:**
+On your computer, complete the Web setup above, then run **from the repository**:
 
 ```sh
-pnpm dev
+cd /path/to/rpi360
+make preview CAMERA=your_username@raspberrypi.local
 ```
 
-**In your browser:**
+Replace the destination with your normal Pi SSH login. The command starts or
+reuses the SSH tunnel and workbench. Enter your **SSH password** if prompted;
+there is **no application account, pairing code or browser credential**.
+Keep this terminal open while using the camera.
 
-1. Open **http://localhost:5173** → **Connect camera**.
-2. Keep **Device address** as `/api`. Enter the six-digit code printed on the
-   Pi. Enable **Remember this browser** to reconnect from new tabs or after
-   restarting the browser. Leave the code empty only when a pairing is already
-   saved in this browser or tab.
-3. Choose **Camera → Open live preview**. Wait for **LIVE · Synced**, then drag
-   the image or adjust **Field of view**, **Yaw**, **Pitch** and **Roll**.
+Open **http://localhost:5173 → Camera → Open live preview**. The workspace
+connects automatically. Wait for **LIVE · Synced**, then drag the image or adjust
+**Field of view**, **Yaw**, **Pitch** and **Roll**. New tabs work the same way;
+close an active preview before opening another (one video viewer at a time).
 
 Use **Start recording** / **Stop recording** to capture on the Pi. Closing a
 preview does not stop a recording. Download the finished recording from the
 Camera panel to edit and export locally.
 
-If connection fails, run `curl --fail http://127.0.0.1:8765/v1/info` in another
-terminal. A failed request means the tunnel or Pi service is unavailable.
-[Setup, reconnecting, pairing recovery and troubleshooting](docs/getting-started/camera.md).
+The Pi API binds to loopback; SSH authenticates access. WebRTC video travels
+directly over the LAN. [Setup and troubleshooting](docs/getting-started/camera.md).
 
 ## Simple API
 
@@ -169,27 +159,22 @@ The SDKs are workspace packages in this alpha. Use them from this checkout.
 ```ts
 import { DeviceClient, LiveViewer } from "@rpi360/web-sdk";
 
-const camera = new DeviceClient("/api", savedToken);
-// First time only: await camera.pair(codeFromPi);
+const camera = new DeviceClient("/api");
 const viewer = await LiveViewer.connect(canvas, camera);
 viewer.setView({ yaw: 45, pitch: -10, fov: 100 });
 // When done: await viewer.close();
 ```
 
-`canvas` is an HTML canvas; `savedToken` is the token returned by pairing (empty
-before first pairing). `setView()` redraws locally. Try the
+`canvas` is an HTML canvas. `setView()` redraws locally. Try the
 [runnable example](apps/web/api-example.html) at
-**http://localhost:5173/api-example.html**, after closing the workspace preview. Use the same tab unless you enabled
-**Remember this browser**.
+**http://localhost:5173/api-example.html**, after closing the workspace preview.
 
 **Capture from Python:**
 
 ```python
-from getpass import getpass
 from rpi360.client import DeviceClient
 
 camera = DeviceClient("http://127.0.0.1:8765")
-camera.pair(getpass("Pairing code from the Pi: "))
 camera.start_capture()
 camera.wait_for_sync()
 camera.start_recording()
@@ -197,9 +182,8 @@ camera.start_recording()
 recording = camera.stop_recording()
 ```
 
-Install locally with `uv sync`, then run with `uv run python`. One controller is
-supported: use Python instead of pairing the browser, or reuse your authorized
-token. [API guide and complete examples](docs/getting-started/api.md) ·
+Install locally with `uv sync`, then run with `uv run python`. The browser and
+Python share the same SSH connection; neither needs an application token. [API guide and complete examples](docs/getting-started/api.md) ·
 [OpenAPI](schemas/device-api.openapi.yaml) · [Swift SDK](packages/apple-sdk/README.md).
 
 ## Repository map

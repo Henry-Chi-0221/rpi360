@@ -33,9 +33,6 @@ import {
 import {
   DeviceClient,
   DeviceApiError,
-  savedPairing,
-  savePairing,
-  forgetPairing,
   Renderer,
   RecordedSource,
   StillSource,
@@ -71,7 +68,6 @@ export default function App() {
     name: string;
   } | null>(null);
   const exportCleanup = useRef<(() => void) | null>(null);
-  const rememberTouched = useRef(false);
   const canvas = useRef<HTMLCanvasElement>(null),
     rawCanvas = useRef<HTMLCanvasElement>(null),
     video = useRef<HTMLVideoElement>(null),
@@ -111,11 +107,8 @@ export default function App() {
     [dialog, setDialog] = useState<"device" | "export" | null>(null),
     [device, setDevice] = useState<DeviceClient | null>(null),
     [url, setUrl] = useState(import.meta.env.DEV ? "/api" : location.origin),
-    [code, setCode] = useState(""),
-    [rememberCamera, setRememberCamera] = useState(
-      () =>
-        savedPairing(import.meta.env.DEV ? "/api" : location.origin).remembered,
-    ),
+    [apiToken, setApiToken] = useState(""),
+    [needsToken, setNeedsToken] = useState(false),
     [connecting, setConnecting] = useState(false),
     [status, setStatus] = useState<any>(null),
     [remote, setRemote] = useState<Recording[]>([]),
@@ -267,6 +260,56 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
+    const controller = new AbortController();
+    for (const name of ["localStorage", "sessionStorage"] as const) {
+      try {
+        const storage = window[name];
+        for (let i = storage.length - 1; i >= 0; i--) {
+          const key = storage.key(i);
+          if (key?.startsWith("rpi360-token:")) storage.removeItem(key);
+        }
+      } catch {
+        /* An unavailable storage area cannot be migrated. */
+      }
+    }
+    const client = new DeviceClient(
+      import.meta.env.DEV ? "/api" : location.origin,
+    );
+    void client
+      .request<{ access_mode: string }>(
+        "/v1/info",
+        undefined,
+        undefined,
+        controller.signal,
+      )
+      .then(async (info) => {
+        if (info.access_mode !== "local") return;
+        await client.request(
+          "/v1/capabilities",
+          undefined,
+          undefined,
+          controller.signal,
+        );
+        if (!controller.signal.aborted) {
+          setDevice(client);
+          setRemote(
+            (
+              await client.request(
+                "/v1/recordings",
+                undefined,
+                undefined,
+                controller.signal,
+              )
+            ).items,
+          );
+        }
+      })
+      .catch(() => {
+        /* Camera-free editing remains available. */
+      });
+    return () => controller.abort();
+  }, []);
+  useEffect(() => {
     if (renderer.current)
       try {
         draw(viewRef.current);
@@ -416,60 +459,30 @@ export default function App() {
     setPlaying(false);
   }
   async function connect() {
-    if (connecting) return;
+    if (connecting) return null;
     setConnecting(true);
     setError("");
-    const stored = savedPairing(url);
-    const client = new DeviceClient(url, stored.token);
-    const remember =
-      rememberCamera || (!rememberTouched.current && stored.remembered);
+    const client = new DeviceClient(url, apiToken);
     try {
-      if (!client.token && !code) {
-        const info = await client.request<{ paired: boolean }>("/v1/info");
-        throw new Error(
-          info.paired
-            ? "Camera is online, but no pairing is saved here. In the already-paired tab, choose Remember this browser and Connect camera, then reconnect here. If that tab is gone, follow Pairing recovery in the setup guide."
-            : "Camera is online. Enter the six-digit pairing code printed by the Pi service to connect this browser.",
-        );
-      }
-      if (code) await client.pair(code);
-      await client.request("/v1/capabilities");
+      const info = await client.connect();
+      setNeedsToken(info.access_mode === "bearer");
       setDevice(client);
-      setRememberCamera(remember);
-      setCode("");
       setDialog(null);
       setMessage("Camera connected");
-      try {
-        savePairing(client.base, client.token, remember);
-      } catch {
-        setMessage(
-          "Camera connected, but the browser could not update saved pairing. Keep this page open.",
-        );
-      }
       await refreshRemote(client);
+      return client;
     } catch (e) {
-      if (e instanceof DeviceApiError && e.status === 401 && !code) {
-        try {
-          forgetPairing(client.base);
-        } catch {
-          /* Preserve the authentication error. */
-        }
-        setDevice(null);
-        fail(
-          new Error(
-            "The saved pairing is no longer valid. Enter a new Pi pairing code, or follow Pairing recovery in the setup guide.",
-          ),
-        );
-        return;
+      if (e instanceof DeviceApiError && e.status === 401) {
+        setNeedsToken(true);
+        setDialog("device");
       }
       fail(e);
+      return null;
     } finally {
       setConnecting(false);
     }
   }
   function openDeviceDialog() {
-    rememberTouched.current = false;
-    setRememberCamera(savedPairing(url).remembered);
     setError("");
     setDialog("device");
   }
@@ -495,15 +508,13 @@ export default function App() {
       setMessage("Live preview closed · camera recording is independent");
       return;
     }
-    if (!device) {
-      openDeviceDialog();
-      return;
-    }
+    const camera = device ?? (await connect());
+    if (!camera) return;
     setError("");
     setPlaying(false);
     setLoading(true);
     try {
-      const c = await device.request("/v1/calibration");
+      const c = await camera.request("/v1/calibration");
       if (!c.profile)
         throw new Error(
           "Add a valid calibration to enable VR preview. Raw recording is still available.",
@@ -511,7 +522,7 @@ export default function App() {
       if (!renderer.current)
         renderer.current = await Renderer.create(canvas.current!, c.profile);
       else renderer.current.setCalibration(c.profile);
-      live.current = await device.preview(video.current!, setDiagnostics);
+      live.current = await camera.preview(video.current!, setDiagnostics);
       setLiveOn(true);
       setTitle("Live camera");
       setSourceKind("Paired fisheye stream");
@@ -827,7 +838,7 @@ export default function App() {
               <Wifi size={21} />
               <span>
                 {device ? "Camera connected" : "Connect your camera"}
-                <small>Local network · paired access</small>
+                <small>Local network · SSH access</small>
               </span>
             </button>
             <button className="import" onClick={() => void startLive()}>
@@ -1174,8 +1185,8 @@ export default function App() {
                 <Wifi className="modal-symbol" />
                 <h2>Connect your camera</h2>
                 <p>
-                  Pair once to preview, record, and transfer files over your
-                  local network.
+                  Connect through SSH and open your live camera. No pairing code
+                  or browser account is needed.
                 </p>
                 <label>
                   Device address
@@ -1183,46 +1194,27 @@ export default function App() {
                     value={url}
                     onChange={(e) => {
                       setUrl(e.target.value);
-                      rememberTouched.current = false;
-                      setRememberCamera(
-                        savedPairing(e.target.value).remembered,
-                      );
+                      setNeedsToken(false);
+                      setApiToken("");
                     }}
-                    placeholder="https://camera.local"
+                    placeholder="/api"
                   />
                 </label>
-                <label>
-                  Pairing code
-                  <input
-                    value={code}
-                    onChange={(e) =>
-                      setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    inputMode="numeric"
-                    placeholder="6-digit code from the camera"
-                  />
-                </label>
-                <label className="remember-camera">
-                  <input
-                    type="checkbox"
-                    checked={rememberCamera}
-                    onChange={(e) => {
-                      rememberTouched.current = true;
-                      setRememberCamera(e.target.checked);
-                    }}
-                  />
-                  Remember this browser
-                </label>
+                {needsToken && (
+                  <label>
+                    API token for this HTTPS deployment
+                    <input
+                      type="password"
+                      value={apiToken}
+                      onChange={(e) => setApiToken(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </label>
+                )}
                 <p className="hint">
-                  Save pairing on this browser to reconnect from new tabs or
-                  after restarting it. Leave unchecked on a shared computer. You
-                  can revoke access below. A blank code only works when this
-                  browser or tab already has a saved pairing.
-                </p>
-                <p className="hint">
-                  Keep the device address <code>/api</code> when using the local
-                  SSH tunnel. If the camera is already online, no new tunnel is
-                  needed.
+                  For the default workflow, run{" "}
+                  <code>make preview CAMERA=user@raspberrypi.local</code> from
+                  your checkout. Keep the address <code>/api</code>.
                 </p>
                 <p className="hint">
                   <a
@@ -1230,10 +1222,8 @@ export default function App() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Camera setup and connection guide
-                  </a>{" "}
-                  · After connecting, choose{" "}
-                  <strong>Camera → Open live preview</strong>.
+                    Camera setup guide
+                  </a>
                 </p>
                 <button
                   className="primary full"
@@ -1243,27 +1233,6 @@ export default function App() {
                   <Link2 size={16} />
                   {connecting ? "Connecting…" : "Connect camera"}
                 </button>
-                {device && (
-                  <button
-                    className="danger-text"
-                    onClick={() =>
-                      void device
-                        .request("/v1/pair", undefined, "DELETE")
-                        .then(() => {
-                          try {
-                            forgetPairing(device.base);
-                          } finally {
-                            setDevice(null);
-                            setRememberCamera(false);
-                            setDialog(null);
-                          }
-                        })
-                        .catch(fail)
-                    }
-                  >
-                    Revoke this controller
-                  </button>
-                )}
               </>
             ) : (
               <>

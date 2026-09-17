@@ -31,6 +31,40 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("simple live API lifecycle", () => {
+  it("connects a fresh client without credentials or a pairing request", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ access_mode: "local" })),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ control_policy: "shared" })),
+      );
+    vi.stubGlobal("fetch", fetch);
+    await expect(new DeviceClient().connect()).resolves.toEqual({
+      access_mode: "local",
+    });
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      "/api/v1/info",
+      "/api/v1/capabilities",
+    ]);
+    expect(
+      fetch.mock.calls.every(
+        ([, options]) => !("Authorization" in options.headers),
+      ),
+    ).toBe(true);
+  });
+
+  it("explains how to upgrade an older Pi service", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response('{"paired":true}')),
+    );
+    await expect(new DeviceClient().connect()).rejects.toThrow(
+      "Update the Pi camera service",
+    );
+  });
+
   it("changes FOV locally and closes preview exactly once without stopping recording", async () => {
     const camera = new DeviceClient();
     const request = vi
@@ -76,17 +110,17 @@ describe("simple live API lifecycle", () => {
       "fetch",
       vi.fn().mockResolvedValue(new Response("", { status: 500 })),
     );
-    await expect(client.request("/v1/info")).rejects.toThrow("make connect");
+    await expect(client.request("/v1/info")).rejects.toThrow("make preview");
     vi.stubGlobal(
       "fetch",
       vi
         .fn()
         .mockResolvedValue(
-          new Response('{"detail":"pairing code expired"}', { status: 401 }),
+          new Response('{"detail":"API token required"}', { status: 401 }),
         ),
     );
     await expect(client.request("/v1/info")).rejects.toThrow(
-      "401: pairing code expired",
+      "401: API token required",
     );
   });
 });

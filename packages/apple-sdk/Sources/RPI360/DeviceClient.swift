@@ -16,12 +16,6 @@ public actor DeviceClient {
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw CoreError.rejected(String(data: data, encoding: .utf8) ?? "Device request failed") }
         return data
     }
-    public func pair(code: String, name: String) async throws {
-        let body = try JSONSerialization.data(withJSONObject: ["code":code,"name":name])
-        let data = try await request("/v1/pair", method: "POST", body: body)
-        guard let object = try JSONSerialization.jsonObject(with: data) as? [String:String], let token = object["token"] else { throw CoreError.invalidResult }
-        self.token = token
-    }
     public func startRecording(requestID: UUID = UUID()) async throws -> Data {
         try await request("/v1/recordings/start", method: "POST", body: JSONSerialization.data(withJSONObject: ["request_id":requestID.uuidString]))
     }

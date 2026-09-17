@@ -920,19 +920,6 @@ footer > span:last-child {
   width: 100%;
   margin-top: 18px;
 }
-.modal .remember-camera {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-.modal .remember-camera input {
-  width: 17px;
-  height: 17px;
-  margin: 0;
-  padding: 0;
-  accent-color: #b9e9b4;
-}
 .danger-text {
   font-size: 10px;
   color: #ddafa7;

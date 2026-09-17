@@ -1,11 +1,8 @@
 """Versioned device API; hardware is injected for contract tests."""
 
 import asyncio
-import hashlib
-import hmac
 import json
 import secrets
-import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
@@ -22,14 +19,10 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from .access import AccessPolicy
 from .preview import PairedPreview
 from .settings import CameraSettings
 from .storage import atomic_json
-
-
-class PairRequest(BaseModel):
-    code: str = Field(min_length=6, max_length=6)
-    name: str = Field(min_length=1, max_length=80)
 
 
 class Command(BaseModel):
@@ -41,50 +34,8 @@ class Offer(BaseModel):
     type: Literal["offer"]
 
 
-class Auth:
-    def __init__(self, root):
-        self.path = Path(root) / "authorized-clients.json"
-        self.clients = json.loads(self.path.read_text()) if self.path.exists() else {}
-        self.code = f"{secrets.randbelow(1_000_000):06d}"
-        self.expires = time.monotonic() + 300
-        self.attempts = {}
-
-    def pair(self, request, address):
-        bucket = int(time.monotonic() // 60)
-        self.attempts = {k: v for k, v in self.attempts.items() if k[1] == bucket}
-        key = (address, bucket)
-        self.attempts[key] = self.attempts.get(key, 0) + 1
-        if self.attempts[key] > 10:
-            raise HTTPException(429, "pairing rate limit exceeded")
-        if time.monotonic() > self.expires or not hmac.compare_digest(
-            request.code, self.code
-        ):
-            raise HTTPException(401, "pairing code invalid or expired")
-        if self.clients:
-            raise HTTPException(
-                409, "a controller is already paired; revoke it before pairing another"
-            )
-        token = secrets.token_urlsafe(32)
-        self.clients[hashlib.sha256(token.encode()).hexdigest()] = {
-            "name": request.name
-        }
-        atomic_json(self.path, self.clients)
-        self.path.chmod(0o600)
-        self.expires = 0
-        return {"token": token, "role": "controller"}
-
-    def verify(self, request):
-        header = request.headers.get("authorization", "")
-        if not header.startswith("Bearer "):
-            raise HTTPException(401, "pair this client first")
-        digest = hashlib.sha256(header[7:].encode()).hexdigest()
-        if digest not in self.clients:
-            raise HTTPException(401, "client token revoked or invalid")
-        return digest
-
-
-def create_app(engine, allowed_origins=(), web_root=None):
-    auth = Auth(engine.root)
+def create_app(engine, allowed_origins=(), web_root=None, *, api_token=None):
+    access = AccessPolicy(api_token)
     connections = {}
     preview_lock = asyncio.Lock()
     command_lock = asyncio.Lock()
@@ -103,7 +54,7 @@ def create_app(engine, allowed_origins=(), web_root=None):
 
     app = FastAPI(title="RPI360 Device API", version="2.0.0-alpha.1", lifespan=lifespan)
     app.state.engine = engine
-    app.state.auth = auth
+    app.state.access = access
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(allowed_origins),
@@ -116,14 +67,21 @@ def create_app(engine, allowed_origins=(), web_root=None):
     async def check_origin(request, call_next):
         from fastapi.responses import JSONResponse
 
+        if access.mode == "local" and not access.local_request(request):
+            return JSONResponse(
+                {"detail": "local access requires loopback and localhost Host"},
+                status_code=403,
+            )
         origin = request.headers.get("origin")
         same_origin = origin == str(request.base_url).rstrip("/")
-        if origin and not same_origin and origin not in allowed_origins:
+        if (origin and not same_origin and origin not in allowed_origins) or (
+            not origin and request.headers.get("sec-fetch-site") == "cross-site"
+        ):
             return JSONResponse({"detail": "origin is not allowed"}, status_code=403)
         return await call_next(request)
 
     def authenticated(request: Request):
-        return auth.verify(request)
+        return access.verify(request)
 
     protected = [Depends(authenticated)]
 
@@ -133,21 +91,7 @@ def create_app(engine, allowed_origins=(), web_root=None):
             "name": "RPI360",
             "api_version": 1,
             "version": "2.0.0-alpha.1",
-            "paired": bool(auth.clients),
-        }
-
-    @app.post("/v1/pair")
-    async def pair(body: PairRequest, request: Request):
-        return auth.pair(body, request.client.host if request.client else "local")
-
-    @app.delete("/v1/pair", dependencies=protected)
-    async def revoke(request: Request):
-        auth.clients.pop(auth.verify(request), None)
-        atomic_json(auth.path, auth.clients)
-        await asyncio.gather(*(pc.close() for pc, _ in list(connections.values())))
-        return {
-            "revoked": True,
-            "pairing": "restart service to generate a new local pairing code",
+            "access_mode": access.mode,
         }
 
     @app.get("/v1/capabilities", dependencies=protected)
@@ -157,7 +101,8 @@ def create_app(engine, allowed_origins=(), web_root=None):
             "revision": 1,
             "recording_schema": 2,
             "calibration_schema": [1, 2],
-            "controllers": 1,
+            "access_mode": access.mode,
+            "control_policy": "shared",
             "preview_clients": 1,
             "recording_profiles": [
                 {

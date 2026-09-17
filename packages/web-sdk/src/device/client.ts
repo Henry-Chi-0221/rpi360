@@ -45,16 +45,19 @@ export class DeviceClient {
   }
   private connectionHelp() {
     return this.base === "/api"
-      ? "Cannot reach the Pi. Start the camera service on the Pi, then run make connect CAMERA=user@raspberrypi.local on this computer and keep the SSH terminal open."
+      ? "Cannot reach the Pi. Start the camera service on the Pi, then run make preview CAMERA=user@raspberrypi.local on this computer and keep the SSH terminal open."
       : "Cannot reach the camera. Check its address, trusted HTTPS certificate, and that both devices are on the same local network.";
   }
-  async pair(code: string) {
-    const result = await this.request<{ token: string }>("/v1/pair", {
-      code,
-      name: "RPI360 Web",
-    });
-    this.token = result.token;
-    return result;
+  async connect() {
+    const info = await this.request<{ access_mode: "local" | "bearer" }>(
+      "/v1/info",
+    );
+    if (info.access_mode !== "local" && info.access_mode !== "bearer")
+      throw new Error(
+        "Update the Pi camera service to use the SSH workflow without pairing codes.",
+      );
+    await this.request("/v1/capabilities");
+    return info;
   }
   startCapture() {
     return this.request("/v1/capture/start", {});

@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: RPI360 Device API
   version: 2.0.0-alpha.1
+  description: Default local mode requires a loopback peer and localhost Host header.
+    SSH authenticates remote users. Direct LAN mode requires HTTPS and a configured
+    bearer token. All modes enforce browser origins; /v1/info reports access_mode.
 paths:
   /v1/info:
     get:
@@ -13,39 +16,6 @@ paths:
           content:
             application/json:
               schema: {}
-  /v1/pair:
-    post:
-      summary: Pair
-      operationId: pair_v1_pair_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PairRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      summary: Revoke
-      operationId: revoke_v1_pair_delete
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-      security:
-      - DeviceToken: []
   /v1/capabilities:
     get:
       summary: Capabilities
@@ -57,7 +27,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/status:
     get:
       summary: Status
@@ -69,7 +43,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/settings:
     get:
       summary: Settings
@@ -81,7 +59,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
     put:
       summary: Update Settings
       operationId: update_settings_v1_settings_put
@@ -104,7 +86,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/calibration:
     get:
       summary: Calibration
@@ -116,7 +102,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/capture/start:
     post:
       summary: Start Capture
@@ -128,7 +118,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/capture/stop:
     post:
       summary: Stop Capture
@@ -140,7 +134,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/recordings/start:
     post:
       summary: Start Recording
@@ -164,7 +162,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/recordings/stop:
     post:
       summary: Stop Recording
@@ -188,7 +190,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/recordings:
     get:
       summary: Recordings
@@ -200,7 +206,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/recordings/{recording_id}:
     get:
       summary: Manifest
@@ -225,7 +235,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/recordings/{recording_id}/files/{name}:
     get:
       summary: Download
@@ -256,7 +270,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/preview-sessions:
     post:
       summary: Preview
@@ -280,7 +298,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/preview-sessions/{session_id}:
     delete:
       summary: Stop Preview
@@ -305,7 +327,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
   /v1/events:
     get:
       summary: Events
@@ -317,7 +343,11 @@ paths:
             application/json:
               schema: {}
       security:
+      - {}
       - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
 components:
   schemas:
     CameraSettings:
@@ -400,23 +430,6 @@ components:
       - sdp
       - type
       title: Offer
-    PairRequest:
-      properties:
-        code:
-          type: string
-          maxLength: 6
-          minLength: 6
-          title: Code
-        name:
-          type: string
-          maxLength: 80
-          minLength: 1
-          title: Name
-      type: object
-      required:
-      - code
-      - name
-      title: PairRequest
     ValidationError:
       properties:
         loc:
@@ -447,3 +460,5 @@ components:
     DeviceToken:
       type: http
       scheme: bearer
+      description: Required only in explicitly configured bearer deployments. Default
+        local access uses SSH, without application credentials.

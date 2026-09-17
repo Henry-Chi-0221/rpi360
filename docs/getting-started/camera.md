@@ -1,194 +1,135 @@
-# Connect a Raspberry Pi for live VR preview
+# Connect a Pi and open live VR
 
-You need the Pi **and** the viewing computer on the same LAN. This guide uses
-SSH for the device API and a local browser workspace. No public port forwarding
-or cloud service is needed. Start with Chrome on the development computer.
+The normal workflow uses your existing SSH login. There are no pairing codes,
+accounts, saved browser tokens or exclusive controller registration. The camera
+API listens on Pi loopback, and the local workbench reaches it through SSH.
+Keep both devices on the same LAN: video uses a direct WebRTC UDP connection.
 
-```mermaid
-flowchart LR
-    B["Browser · localhost:5173"] -->|"/api"| V["Vite on your computer"]
-    V -->|"127.0.0.1:8765"| T[SSH tunnel]
-    T -->|"Pi loopback :8765"| C[Pi camera service]
-    C ==>|"Paired H.264 · direct LAN UDP / WebRTC"| B
-```
+## 1. On the Pi
 
-The tunnel carries control, SDP negotiation and file downloads. **WebRTC media
-uses a separate direct LAN connection.** A working SSH tunnel alone does not
-make remote video work across unrelated networks or restrictive guest Wi-Fi.
+Use Raspberry Pi OS with Picamera2/libcamera providing `SyncMode`, `SyncReady`
+and `SensorTimestamp`. The inspected Pi 5 rig uses Picamera2 0.3.37 and libcamera
+0.7.2 with two IMX219 fisheye cameras. Confirm both cameras are detected first.
 
-## 1. On the Pi: install and start the camera service
-
-Use a checkout of the same v2 branch as your computer. Raspberry Pi OS must
-identify both cameras; the Picamera2/libcamera build must provide `SyncMode`,
-`SyncReady` and `SensorTimestamp`. The inspected rig uses Picamera2 0.3.37 and
-libcamera 0.7.2. Use OS packages for camera integration.
-
-From the repository root **on the Pi**:
+For this pre-release, clone the v2 branch (the default branch may still be v1):
 
 ```sh
+git clone --branch codex/rpi360-v2 https://github.com/Henry-Chi-0221/rpi360.git
+cd rpi360
 sudo apt install python3-venv python3-picamera2 python3-av ffmpeg
-bash deploy/raspberry-pi/install.sh v2.0.0-alpha.1-local
+bash deploy/raspberry-pi/install.sh "$(git rev-parse --short HEAD)" --activate
+make camera CALIBRATION=/path/to/your/calibration.json
 ```
 
-This installs a new version in `~/.local/share/rpi360/releases/`. It does not
-activate it or alter an existing prototype. Use a new identifier for subsequent
-installs; the installer will not overwrite a release.
+Replace the calibration path with **your physical rig's profile**. Keep this
+terminal running. The example profile in Git is not a universal calibration.
+The installer creates a separate release and selects it only after an import
+smoke check; it never overwrites an existing release, prototype or recording.
+Run the installer once per new commit, after stopping any older camera service.
+Omit `--activate` when staging a release without switching the selected version.
 
-Copy **your rig's calibration** to the separate data directory:
+Recordings default to `~/.local/share/rpi360/data`. Set `RPI360_DATA_DIR` to reuse
+an existing data directory. For future launches, you may copy your calibration
+to `~/.local/share/rpi360/data/calibration.json` and simply run `make camera`.
+The service does not print or require a pairing code.
+
+## 2. On your computer
+
+Clone the same branch, enter the checkout and complete the one-time
+[Web build setup](../../README.md#try-it-without-a-camera). Then:
 
 ```sh
-# Replace this source path with your actual calibration file.
-cp /path/to/your/calibration.json ~/.local/share/rpi360/data/calibration.json
+cd /path/to/rpi360
+make preview CAMERA=your_username@raspberrypi.local
 ```
 
-Keep the original calibration and recordings backed up. The repository's example
-calibration is for one physical rig; it is not a universal preset.
+Use the SSH destination that works for your Pi: hostname, `.local` name or LAN
+IP. Enter your normal SSH password if prompted; an SSH key also works.
+The command starts both the tunnel and workbench and prints the browser URL.
+Leave it running. Ctrl+C stops only the local processes it started; it does not
+stop a Pi recording. Existing working services are reused and left untouched.
+Reusing a tunnel does not change its destination; close it first to switch Pis.
 
-Start the service and **leave this Pi terminal running**:
+Open **http://localhost:5173 → Camera → Open live preview**. The camera connects
+automatically. Wait for **LIVE · Synced**, then drag to look around or adjust FOV,
+yaw, pitch and roll. No Connect dialog is required for the standard setup.
 
-```sh
-~/.local/share/rpi360/releases/v2.0.0-alpha.1-local/.venv/bin/rpi360-camera \
-  --data-dir ~/.local/share/rpi360/data \
-  --calibration ~/.local/share/rpi360/data/calibration.json \
-  --origin http://localhost:5173
-```
+Use **Source** to see both unstitched fisheyes, **Panorama** for the complete
+scene, or **Reframe** for a viewport. Projection happens on your computer.
+Use **Start recording** / **Stop recording** to capture on the Pi; closing a
+preview or browser does not stop recording. Download a finished recording from
+the Camera panel to edit locally. Only one live video viewer is supported, but
+any connected tab or SDK can access controls and recordings.
 
-If no controller is paired, it prints `Local pairing code (valid 5 minutes): …`.
-Keep the code private. A service with an existing controller does not print a
-new code; reconnect using the saved pairing in that browser or tab.
+For separate terminal management, `make connect CAMERA=...` starts only SSH;
+`pnpm dev` starts only the workbench. Both commands run from the repository root.
 
-## 2. On your computer: open the tunnel and workspace
-
-After the [Web build setup](../../README.md#try-it-without-a-camera), open two
-terminals in the local repository.
-
-**Terminal 1 — SSH tunnel:**
-
-```sh
-make connect CAMERA=YOUR_USER@raspberrypi.local
-```
-
-Replace the SSH destination with the same one you normally use to reach the Pi.
-A hostname such as `raspberrypi`, its `.local` name, or a LAN IP can be used.
-Enter your SSH password when prompted. Successful tunneling stays running
-without returning a shell prompt. Keep this terminal open.
-
-If an RPI360 API is already reachable on local port 8765, `make connect` reports
-that the existing connection is available and exits successfully without asking
-for a password or opening another tunnel. Keep the original tunnel running and
-use the workspace. This does not verify or switch its SSH destination; close
-the old tunnel first when intentionally connecting to another camera.
-
-**Terminal 2 — workspace:**
-
-```sh
-pnpm dev
-```
-
-Open **http://localhost:5173**. Vite uses a fixed port and reports a conflict
-rather than silently changing to an origin the Pi does not allow.
-
-## 3. In the browser: connect and preview
-
-1. Select **Connect camera** in the header or Camera panel.
-2. Keep **Device address** as **`/api`**. This is the local workspace proxy,
-   not a place to enter an SSH hostname or password.
-3. For first pairing, enter the **six-digit Pi service code**. Select
-   **Remember this browser** on your own computer to reconnect from new tabs or
-   after restarting the browser. Leave the code empty only if pairing has already
-   been saved in this browser or tab. Press **Connect camera**.
-4. Select **Camera** in the left rail → **Open live preview**.
-5. Wait for **LIVE · Synced**. Drag to look around, scroll to zoom, or change
-   **Field of view**, **Yaw**, **Pitch** and **Roll**.
-
-The Pi sends two complete fisheye views side by side. Projection and viewpoint
-changes happen on your computer. Use **Source** to inspect the incoming pair,
-**Panorama** for the whole scene, and **Reframe** for an interactive viewport.
-
-Use **Start recording** after sync lock, then **Stop recording** to finalize.
-Closing preview or the browser does not stop recording. Reconnect to stop it and
-download the finished bundle from the Camera panel. The source stays on the Pi.
-
-## Diagnose the connection
-
-In another local terminal:
+## Troubleshooting
 
 ```sh
 curl --fail http://127.0.0.1:8765/v1/info
-curl --fail http://localhost:5173/api/v1/info
+curl --fail http://localhost:5173/api/v1/status
 ```
 
-The first checks the SSH path to the Pi service; the second also checks Vite's
-proxy. Both should return JSON with `name: RPI360` and a `paired` state.
+The first must report `name: RPI360`, `api_version: 1`, `access_mode: local`.
+The second verifies the complete browser proxy path without credentials.
 
-| What you see | What to do |
+| Symptom | Action |
 | --- | --- |
-| Cannot reach the Pi / empty HTTP 500 | Check both commands above. Start the Pi service and keep the SSH tunnel open. |
-| API already available on 8765 | The helper found an existing connection. Reuse it and go to the browser; no new SSH login is needed. |
-| Port 8765 occupied but API unavailable | The listener may be a stale tunnel or another program. Check it with `lsof -nP -iTCP:8765 -sTCP:LISTEN`, then check the Pi service. The helper leaves the existing process untouched. |
-| Port 5173 already in use | Reuse the running workspace at `http://localhost:5173`; do not start a second copy. |
-| Pairing code invalid or expired | If never paired, restart the service and use the new five-minute code. A saved token needs no new code. |
-| Camera online but no pairing saved / `401` | SSH and pairing are separate. In the already-paired tab, select **Remember this browser** and connect again; the new tab can then reconnect without a code. If that tab is lost, use pairing recovery below. |
-| `409` / controller already paired | Only one controller is supported. Revoke it in the connected tab before pairing another. |
-| `409` / preview already active | Close the other preview first. Only one viewer is supported. |
-| Connected but no video | Check both devices are on the same LAN, UDP is permitted, and guest/client isolation is disabled on that network. The SSH tunnel does not carry media. |
-| Origin is not allowed | Use exactly `http://localhost:5173`; alternatively explicitly configure your chosen trusted origin on the Pi. |
-| Calibration is missing | Start the service with `--calibration` pointing to your valid rig profile. Recording can work without VR calibration; VR preview cannot. |
+| `No rule to make target preview` | Enter the rpi360 checkout first; update it if it predates this command. |
+| Update the Pi camera service / old `401` | Update **both** checkouts, install and start the new Pi release, then reload the workbench. Old browser credentials are no longer used. |
+| API unavailable | Start `make camera` on the Pi and check your SSH destination. |
+| Port 8765 occupied, API unavailable | Inspect `lsof -nP -iTCP:8765 -sTCP:LISTEN` and the Pi service. The helper never kills an unknown process. |
+| Workbench port 5173 occupied | Reuse the workbench at that URL, or close an unrelated/outdated server first. |
+| `409` preview capacity | Close the other preview. There is one video viewer; there is no controller pairing limit. |
+| Connected, no video | Permit LAN UDP and disable guest/client isolation on your network. SSH transports API traffic, not video. |
+| Origin not allowed | Use `http://localhost:5173` or `http://127.0.0.1:5173`; custom origins require explicit `--origin` on the Pi. |
+| Calibration missing | Start with `CALIBRATION=/path/to/your/profile.json`. VR preview needs a valid rig profile. |
 
-### Reconnect and recover pairing
+## Optional direct HTTPS deployment
 
-**Remember this browser** saves the controller token in local storage for this
-browser profile and origin. Other tabs at `http://localhost:5173` can then connect
-without a new code; restarting the browser also preserves it. An incognito
-window, another browser, `http://127.0.0.1:5173`, or clearing site data does not
-share that pairing. Leave this option unchecked on shared computers.
+This is separate from the simple SSH workflow. An iPad cannot use a Mac's
+loopback address. For direct LAN access, serve the built workbench on a trusted
+HTTPS origin on the Pi and configure one operator-managed API token:
 
-Without this option, pairing lasts only in the current tab's session storage.
-Old v2 tabs can migrate their existing token by selecting **Remember this browser**
-and **Connect camera**; no Pi restart or new controller is required. SSH being
-connected, or `/v1/info` reporting `paired: true`, does not mean the current tab
-has the controller token.
+```sh
+umask 077
+python3 -c 'import secrets; print(secrets.token_urlsafe(32))' > /path/to/api-token
+rpi360-camera --host 0.0.0.0 --cert /path/to/cert.pem --key /path/to/key.pem \
+  --api-token-file /path/to/api-token --web-root /path/to/apps/web/dist \
+  --data-dir /path/to/data --calibration /path/to/calibration.json
+```
 
-In a connected tab, **Connect camera → Revoke this controller** invalidates the
-server token and removes both local and session copies in that tab. Restart the
-Pi service for a new code. Revocation invalidates other tabs' copies as well;
-they discard rejected saved credentials on the next connection attempt.
+Build the workbench with `pnpm wasm && pnpm build`. Trust the certificate on
+each client and use a certificate naming the camera hostname; do not disable
+certificate validation. In this mode the Connect dialog requests the configured
+API token. It is held in memory, not saved in browser storage. SDKs accept the
+same optional token. Rotate the file and restart the service to replace it;
+stop/finalize recording before restarting. Keep token files private (0600).
+Browser LAN permission and Apple device behavior still need deployment-specific
+validation. Do not proxy unauthenticated loopback access onto a public interface.
 
-If the only controller token has been lost, stop the camera service first, then
-rename `authorized-clients.json` in **the data directory you actually use** to
-`authorized-clients.json.backup-TIMESTAMP`. Restart the same service. This revokes
-old tokens and prints a fresh code. It does not remove recordings or calibration.
-Do not reset pairing during an active recording.
+## Unattended service and updates
 
-## Trusted HTTPS deployment
+The supplied systemd user unit uses the selected `current` release and separate
+data directory. After the foreground setup works:
 
-The SSH workflow is for development on the local computer. An iPhone/iPad cannot
-reach that computer's loopback address. For direct device access, deploy the
-workbench on a trusted HTTPS origin (for example on the Pi) instead.
+```sh
+mkdir -p ~/.config/systemd/user
+cp deploy/raspberry-pi/systemd/rpi360-camera.service ~/.config/systemd/user/
+# Place your calibration at ~/.local/share/rpi360/data/calibration.json first.
+# Stop the foreground service before starting systemd.
+systemctl --user daemon-reload
+systemctl --user enable --now rpi360-camera
+```
 
-Pass `--host 0.0.0.0 --cert CERT --key KEY` to the Pi service. Certificates must
-be trusted by each client and name the camera hostname. A reverse proxy may serve
-the built Web app and proxy the API, yielding one HTTPS origin. Preserve bearer,
-Range and SDP data. WebRTC still needs negotiated LAN UDP connectivity.
+Use `journalctl --user -u rpi360-camera` for logs. To start before SSH login,
+configure user lingering with `sudo loginctl enable-linger "$USER"`.
+For updates, finalize recording, stop the service, install/activate a new unique
+release, then restart. Rollback selects a previous release without changing data.
+Old `authorized-clients.json` files are ignored and left intact; they need no
+recovery/reset operation. The workbench removes obsolete saved RPI360 tokens.
 
-For a development CA, issue a certificate whose SAN includes the Pi hostname,
-install the CA explicitly using each device's OS settings, and verify HTTPS
-without interstitials before pairing. Do not disable certificate validation.
-Chrome may also require local-network permission in the actual deployment.
-
-Build `pnpm wasm && pnpm build`, copy `apps/web/dist` into the release directory,
-and pass `--web-root /path/to/release/web`. The built workbench calls `/v1` on its
-own origin. Apple device/browser behavior still needs device-specific validation.
-
-## Service lifetime, versioning and camera mode
-
-For unattended operation, adapt the supplied systemd user unit. It uses the
-versioned `current` path and separate data storage; switch `current` only after
-validating the new release. Retain the previous release to roll back executable
-code without touching recordings, tokens or calibration.
-
-The candidate source mode is 1640×1232, 30 fps, 8 Mbps per camera, retaining the
-full sensor view. Preview starts with two 720×540 images in one 1440×540 H.264
-track. These are requested settings, not a sustained-performance promise.
-`GET /v1/settings` and revision-checked `PUT /v1/settings` control exposure and
-white balance. See [API examples](api.md) and [validation](../validation/status.md).
+The candidate source mode is 1640×1232 at 30 fps and 8 Mbps per camera; preview
+uses a 1440×540 H.264 pair. These are requested settings, not a sustained
+performance claim. See [measured validation](../validation/status.md).

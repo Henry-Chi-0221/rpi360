@@ -18,7 +18,11 @@ an active camera recording. The camera service owns recording lifetime.
 See [connection instructions](../getting-started/camera.md),
 [API examples](../getting-started/api.md), and [overall status](status.md).
 
-## Browser pairing recovery
+## Browser pairing recovery (historical; superseded)
+
+The pairing system described below was subsequently removed at the user’s
+request. Current connections use SSH without application credentials; see
+[the replacement validation](simple-connection.md).
 
 A later user attempt reached the Pi but received `401: pair this client first`
 in a separately opened workspace tab. The original implementation only retained

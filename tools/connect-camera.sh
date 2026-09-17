@@ -12,7 +12,7 @@ if command -v curl >/dev/null 2>&1 && \
   echo 'An RPI360 camera API is already available at http://127.0.0.1:8765.'
   echo "No new SSH tunnel was started for $camera; the existing connection is unchanged."
   echo 'Keep the existing tunnel running. To switch cameras, close that tunnel first.'
-  echo 'Open the existing paired tab at http://localhost:5173 → Camera → Open live preview.'
+  echo 'Open http://localhost:5173 → Camera → Open live preview.'
   echo 'If the workspace is not running, start it from this checkout with: pnpm dev'
   exit 0
 fi
@@ -26,8 +26,8 @@ fi
 echo "Connecting the local device API to $camera. Keep this terminal open."
 echo 'The Pi camera service must already be running; see docs/getting-started/camera.md.'
 echo 'In another terminal run: pnpm dev'
-echo 'Open http://localhost:5173 → Connect camera → address /api → Camera → Open live preview.'
-echo 'Use the Pi pairing code once; leave it empty when reconnecting the same tab.'
+echo 'Open http://localhost:5173 → Camera → Open live preview.'
+echo 'No pairing code is needed. For a single-command setup, use make preview instead.'
 echo 'Mac and Pi must share a LAN: WebRTC video uses a direct UDP connection.'
 exec ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=6 -N -L127.0.0.1:8765:127.0.0.1:8765 "$camera"

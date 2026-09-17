@@ -1,5 +1,4 @@
 import pytest
-
 from rpi360.client import DeviceClient
 
 

@@ -13,13 +13,29 @@ root.mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory() as t:
     schema = create_app(CaptureEngine(t)).openapi()
     schema["components"]["securitySchemes"] = {
-        "DeviceToken": {"type": "http", "scheme": "bearer"}
+        "DeviceToken": {
+            "type": "http",
+            "scheme": "bearer",
+            "description": (
+                "Required only in explicitly configured bearer deployments. "
+                "Default local access uses SSH, without application credentials."
+            ),
+        }
     }
+    schema["info"]["description"] = (
+        "Default local mode requires a loopback peer and localhost Host header. "
+        "SSH authenticates remote users. Direct LAN mode requires HTTPS and a "
+        "configured bearer token. All modes enforce browser origins; "
+        "/v1/info reports access_mode."
+    )
     for path, methods in schema["paths"].items():
-        if path not in ["/v1/info", "/v1/pair"]:
+        if path != "/v1/info":
             for _method, operation in methods.items():
-                operation["security"] = [{"DeviceToken": []}]
-    schema["paths"]["/v1/pair"]["delete"]["security"] = [{"DeviceToken": []}]
+                operation["security"] = [{}, {"DeviceToken": []}]
+                operation["x-access-modes"] = {
+                    "local": "SSH/loopback",
+                    "bearer": "DeviceToken required",
+                }
     (root / "device-api.openapi.yaml").write_text(
         yaml.safe_dump(schema, sort_keys=False)
     )
