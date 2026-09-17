@@ -10,7 +10,10 @@ follow the [camera connection guide](camera.md). The runnable example is at
 <http://localhost:5173/api-example.html>; its source is
 [live-example.ts](../../apps/web/src/live-example.ts).
 Close the workbench's preview first. Only one viewer is supported at a time.
-Navigate in the same tab to reuse its pairing token.
+Use the same tab to reuse a tab-only token, or enable **Remember this browser**
+in the workbench before opening the example in another tab. The SDK exposes
+`savedPairing(base)`, `savePairing(base, token, remember)` and
+`forgetPairing(base)`; remember pairing only after the user selects that option.
 
 ```ts
 import { DeviceClient, LiveViewer } from "@rpi360/web-sdk";

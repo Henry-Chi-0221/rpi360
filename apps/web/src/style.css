@@ -868,6 +868,8 @@ footer > span:last-child {
 }
 .modal {
   width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: #1b2a20;
   border: 1px solid #3f5947;
   border-radius: 15px;
@@ -917,6 +919,19 @@ footer > span:last-child {
 .full {
   width: 100%;
   margin-top: 18px;
+}
+.modal .remember-camera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.modal .remember-camera input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  padding: 0;
+  accent-color: #b9e9b4;
 }
 .danger-text {
   font-size: 10px;

@@ -1,8 +1,12 @@
-import { DeviceClient, LiveViewer } from "@rpi360/web-sdk";
+import {
+  DeviceClient,
+  LiveViewer,
+  savedPairing,
+  savePairing,
+} from "@rpi360/web-sdk";
 
 const camera = new DeviceClient(import.meta.env.DEV ? "/api" : location.origin);
-const tokenKey = "rpi360-token:" + camera.base;
-camera.token = sessionStorage.getItem(tokenKey) ?? "";
+camera.token = savedPairing(camera.base).token;
 const canvas = document.querySelector<HTMLCanvasElement>("#view")!;
 const start = document.querySelector<HTMLButtonElement>("#start")!;
 const stop = document.querySelector<HTMLButtonElement>("#stop")!;
@@ -21,7 +25,13 @@ document.querySelector<HTMLFormElement>("#connect")!.onsubmit = async (
       .value.trim();
     if (code) {
       await camera.pair(code);
-      sessionStorage.setItem(tokenKey, camera.token);
+      savePairing(
+        camera.base,
+        camera.token,
+        savedPairing(camera.base).remembered,
+      );
+    } else {
+      camera.token = savedPairing(camera.base).token;
     }
     viewer = await LiveViewer.connect(canvas, camera, {
       onError: (error) => {

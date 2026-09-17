@@ -146,7 +146,9 @@ pnpm dev
 
 1. Open **http://localhost:5173** → **Connect camera**.
 2. Keep **Device address** as `/api`. Enter the six-digit code printed on the
-   Pi. Leave the code empty when reconnecting an already-paired tab.
+   Pi. Enable **Remember this browser** to reconnect from new tabs or after
+   restarting the browser. Leave the code empty only when a pairing is already
+   saved in this browser or tab.
 3. Choose **Camera → Open live preview**. Wait for **LIVE · Synced**, then drag
    the image or adjust **Field of view**, **Yaw**, **Pitch** and **Roll**.
 
@@ -177,8 +179,8 @@ viewer.setView({ yaw: 45, pitch: -10, fov: 100 });
 `canvas` is an HTML canvas; `savedToken` is the token returned by pairing (empty
 before first pairing). `setView()` redraws locally. Try the
 [runnable example](apps/web/api-example.html) at
-**http://localhost:5173/api-example.html**, in the same tab after closing the
-workspace preview.
+**http://localhost:5173/api-example.html**, after closing the workspace preview. Use the same tab unless you enabled
+**Remember this browser**.
 
 **Capture from Python:**
 

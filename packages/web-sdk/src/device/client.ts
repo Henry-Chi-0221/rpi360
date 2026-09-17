@@ -1,10 +1,19 @@
 import type { Recording } from "../types";
+export class DeviceApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(`${status}: ${message}`);
+    this.name = "DeviceApiError";
+  }
+}
 export class DeviceClient {
   constructor(
     public base = "/api",
     public token = "",
   ) {
-    this.base = base.replace(/\/$/, "");
+    this.base = base.trim().replace(/\/+$/, "");
   }
   async request<T = any>(
     path: string,
@@ -30,7 +39,7 @@ export class DeviceClient {
         message = JSON.parse(message).detail ?? message;
       } catch {}
       if (r.status >= 500 && !message.trim()) message = this.connectionHelp();
-      throw new Error(`${r.status}: ${message}`);
+      throw new DeviceApiError(r.status, message);
     }
     return r.json();
   }

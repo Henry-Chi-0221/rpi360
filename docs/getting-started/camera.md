@@ -55,7 +55,7 @@ Start the service and **leave this Pi terminal running**:
 
 If no controller is paired, it prints `Local pairing code (valid 5 minutes): …`.
 Keep the code private. A service with an existing controller does not print a
-new code; reconnect using the saved token in that browser tab.
+new code; reconnect using the saved pairing in that browser or tab.
 
 ## 2. On your computer: open the tunnel and workspace
 
@@ -93,8 +93,10 @@ rather than silently changing to an origin the Pi does not allow.
 1. Select **Connect camera** in the header or Camera panel.
 2. Keep **Device address** as **`/api`**. This is the local workspace proxy,
    not a place to enter an SSH hostname or password.
-3. For first pairing, enter the **six-digit Pi service code**. For a previously
-   paired tab, leave it empty. Press **Connect camera**.
+3. For first pairing, enter the **six-digit Pi service code**. Select
+   **Remember this browser** on your own computer to reconnect from new tabs or
+   after restarting the browser. Leave the code empty only if pairing has already
+   been saved in this browser or tab. Press **Connect camera**.
 4. Select **Camera** in the left rail → **Open live preview**.
 5. Wait for **LIVE · Synced**. Drag to look around, scroll to zoom, or change
    **Field of view**, **Yaw**, **Pitch** and **Roll**.
@@ -126,7 +128,7 @@ proxy. Both should return JSON with `name: RPI360` and a `paired` state.
 | Port 8765 occupied but API unavailable | The listener may be a stale tunnel or another program. Check it with `lsof -nP -iTCP:8765 -sTCP:LISTEN`, then check the Pi service. The helper leaves the existing process untouched. |
 | Port 5173 already in use | Reuse the running workspace at `http://localhost:5173`; do not start a second copy. |
 | Pairing code invalid or expired | If never paired, restart the service and use the new five-minute code. A saved token needs no new code. |
-| `401` / pair this client first | Enter the Pi code, or return to the already-paired tab. Tokens are currently stored in that tab's session storage. |
+| Camera online but no pairing saved / `401` | SSH and pairing are separate. In the already-paired tab, select **Remember this browser** and connect again; the new tab can then reconnect without a code. If that tab is lost, use pairing recovery below. |
 | `409` / controller already paired | Only one controller is supported. Revoke it in the connected tab before pairing another. |
 | `409` / preview already active | Close the other preview first. Only one viewer is supported. |
 | Connected but no video | Check both devices are on the same LAN, UDP is permitted, and guest/client isolation is disabled on that network. The SSH tunnel does not carry media. |
@@ -135,9 +137,22 @@ proxy. Both should return JSON with `name: RPI360` and a `paired` state.
 
 ### Reconnect and recover pairing
 
-Reloading an existing tab preserves its session token. Closing that tab, changing
-browser or clearing site data may lose it. In a connected tab, **Connect camera →
-Revoke this controller** releases control; restart the Pi service for a new code.
+**Remember this browser** saves the controller token in local storage for this
+browser profile and origin. Other tabs at `http://localhost:5173` can then connect
+without a new code; restarting the browser also preserves it. An incognito
+window, another browser, `http://127.0.0.1:5173`, or clearing site data does not
+share that pairing. Leave this option unchecked on shared computers.
+
+Without this option, pairing lasts only in the current tab's session storage.
+Old v2 tabs can migrate their existing token by selecting **Remember this browser**
+and **Connect camera**; no Pi restart or new controller is required. SSH being
+connected, or `/v1/info` reporting `paired: true`, does not mean the current tab
+has the controller token.
+
+In a connected tab, **Connect camera → Revoke this controller** invalidates the
+server token and removes both local and session copies in that tab. Restart the
+Pi service for a new code. Revocation invalidates other tabs' copies as well;
+they discard rejected saved credentials on the next connection attempt.
 
 If the only controller token has been lost, stop the camera service first, then
 rename `authorized-clients.json` in **the data directory you actually use** to

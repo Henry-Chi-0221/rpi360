@@ -32,6 +32,10 @@ import {
 } from "lucide-react";
 import {
   DeviceClient,
+  DeviceApiError,
+  savedPairing,
+  savePairing,
+  forgetPairing,
   Renderer,
   RecordedSource,
   StillSource,
@@ -67,6 +71,7 @@ export default function App() {
     name: string;
   } | null>(null);
   const exportCleanup = useRef<(() => void) | null>(null);
+  const rememberTouched = useRef(false);
   const canvas = useRef<HTMLCanvasElement>(null),
     rawCanvas = useRef<HTMLCanvasElement>(null),
     video = useRef<HTMLVideoElement>(null),
@@ -107,6 +112,11 @@ export default function App() {
     [device, setDevice] = useState<DeviceClient | null>(null),
     [url, setUrl] = useState(import.meta.env.DEV ? "/api" : location.origin),
     [code, setCode] = useState(""),
+    [rememberCamera, setRememberCamera] = useState(
+      () =>
+        savedPairing(import.meta.env.DEV ? "/api" : location.origin).remembered,
+    ),
+    [connecting, setConnecting] = useState(false),
     [status, setStatus] = useState<any>(null),
     [remote, setRemote] = useState<Recording[]>([]),
     [diagnostics, setDiagnostics] = useState<any>(null),
@@ -406,22 +416,62 @@ export default function App() {
     setPlaying(false);
   }
   async function connect() {
+    if (connecting) return;
+    setConnecting(true);
     setError("");
-    const client = new DeviceClient(
-      url,
-      sessionStorage.getItem("rpi360-token:" + url) ?? "",
-    );
+    const stored = savedPairing(url);
+    const client = new DeviceClient(url, stored.token);
+    const remember =
+      rememberCamera || (!rememberTouched.current && stored.remembered);
     try {
+      if (!client.token && !code) {
+        const info = await client.request<{ paired: boolean }>("/v1/info");
+        throw new Error(
+          info.paired
+            ? "Camera is online, but no pairing is saved here. In the already-paired tab, choose Remember this browser and Connect camera, then reconnect here. If that tab is gone, follow Pairing recovery in the setup guide."
+            : "Camera is online. Enter the six-digit pairing code printed by the Pi service to connect this browser.",
+        );
+      }
       if (code) await client.pair(code);
       await client.request("/v1/capabilities");
-      sessionStorage.setItem("rpi360-token:" + url, client.token);
       setDevice(client);
+      setRememberCamera(remember);
+      setCode("");
       setDialog(null);
       setMessage("Camera connected");
+      try {
+        savePairing(client.base, client.token, remember);
+      } catch {
+        setMessage(
+          "Camera connected, but the browser could not update saved pairing. Keep this page open.",
+        );
+      }
       await refreshRemote(client);
     } catch (e) {
+      if (e instanceof DeviceApiError && e.status === 401 && !code) {
+        try {
+          forgetPairing(client.base);
+        } catch {
+          /* Preserve the authentication error. */
+        }
+        setDevice(null);
+        fail(
+          new Error(
+            "The saved pairing is no longer valid. Enter a new Pi pairing code, or follow Pairing recovery in the setup guide.",
+          ),
+        );
+        return;
+      }
       fail(e);
+    } finally {
+      setConnecting(false);
     }
+  }
+  function openDeviceDialog() {
+    rememberTouched.current = false;
+    setRememberCamera(savedPairing(url).remembered);
+    setError("");
+    setDialog("device");
   }
   async function refreshRemote(client = device) {
     if (client) setRemote((await client.request("/v1/recordings")).items);
@@ -446,7 +496,7 @@ export default function App() {
       return;
     }
     if (!device) {
-      setDialog("device");
+      openDeviceDialog();
       return;
     }
     setError("");
@@ -773,10 +823,7 @@ export default function App() {
         )}
         {tab === "device" && (
           <>
-            <button
-              className="connect-card"
-              onClick={() => setDialog("device")}
-            >
+            <button className="connect-card" onClick={openDeviceDialog}>
               <Wifi size={21} />
               <span>
                 {device ? "Camera connected" : "Connect your camera"}
@@ -866,10 +913,10 @@ export default function App() {
           <div className="header-actions">
             <button
               className={"device-status " + (device ? "connected" : "")}
-              onClick={() => setDialog("device")}
+              onClick={openDeviceDialog}
             >
               <span className="status-dot" />
-              {device ? "Camera connected" : "Camera offline"}
+              {device ? "Camera connected" : "Connect camera"}
             </button>
             <button
               className="primary"
@@ -1134,7 +1181,13 @@ export default function App() {
                   Device address
                   <input
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      rememberTouched.current = false;
+                      setRememberCamera(
+                        savedPairing(e.target.value).remembered,
+                      );
+                    }}
                     placeholder="https://camera.local"
                   />
                 </label>
@@ -1149,12 +1202,27 @@ export default function App() {
                     placeholder="6-digit code from the camera"
                   />
                 </label>
+                <label className="remember-camera">
+                  <input
+                    type="checkbox"
+                    checked={rememberCamera}
+                    onChange={(e) => {
+                      rememberTouched.current = true;
+                      setRememberCamera(e.target.checked);
+                    }}
+                  />
+                  Remember this browser
+                </label>
                 <p className="hint">
-                  On your computer, run{" "}
-                  <code>make connect CAMERA=user@raspberrypi.local</code> and
-                  keep that terminal open. Keep the address <code>/api</code>.{" "}
-                  Enter the code printed by the Pi service the first time; leave
-                  it empty to reconnect this tab.
+                  Save pairing on this browser to reconnect from new tabs or
+                  after restarting it. Leave unchecked on a shared computer. You
+                  can revoke access below. A blank code only works when this
+                  browser or tab already has a saved pairing.
+                </p>
+                <p className="hint">
+                  Keep the device address <code>/api</code> when using the local
+                  SSH tunnel. If the camera is already online, no new tunnel is
+                  needed.
                 </p>
                 <p className="hint">
                   <a
@@ -1167,9 +1235,13 @@ export default function App() {
                   · After connecting, choose{" "}
                   <strong>Camera → Open live preview</strong>.
                 </p>
-                <button className="primary full" onClick={() => void connect()}>
+                <button
+                  className="primary full"
+                  disabled={connecting}
+                  onClick={() => void connect()}
+                >
                   <Link2 size={16} />
-                  Connect camera
+                  {connecting ? "Connecting…" : "Connect camera"}
                 </button>
                 {device && (
                   <button
@@ -1178,9 +1250,13 @@ export default function App() {
                       void device
                         .request("/v1/pair", undefined, "DELETE")
                         .then(() => {
-                          sessionStorage.removeItem("rpi360-token:" + url);
-                          setDevice(null);
-                          setDialog(null);
+                          try {
+                            forgetPairing(device.base);
+                          } finally {
+                            setDevice(null);
+                            setRememberCamera(false);
+                            setDialog(null);
+                          }
                         })
                         .catch(fail)
                     }

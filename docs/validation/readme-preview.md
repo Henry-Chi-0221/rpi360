@@ -17,3 +17,25 @@ an active camera recording. The camera service owns recording lifetime.
 
 See [connection instructions](../getting-started/camera.md),
 [API examples](../getting-started/api.md), and [overall status](status.md).
+
+## Browser pairing recovery
+
+A later user attempt reached the Pi but received `401: pair this client first`
+in a separately opened workspace tab. The original implementation only retained
+credentials in session storage, so a healthy SSH tunnel did not authorize that
+tab. The fix adds opt-in **Remember this browser**, migrates an existing tab's
+credential after successful authentication, and distinguishes a reachable camera
+with missing pairing from an unavailable camera.
+
+With the user's consent, the existing authorized tab saved its pairing. The
+previously failing tab then connected with a blank code and displayed
+`LIVE · Synced`. After the final UI reload, the remember checkbox remained
+selected; blank-code reconnection and live preview succeeded again. No Pi
+restart, controller reset or recording-file changes were needed. Full browser
+restart was not performed during this user's active session.
+
+Thirteen Web tests passed, including three new cases for tab-only isolation,
+opt-in migration/new-tab access, removal of stored credentials, opting out and
+storage failure preservation. TypeScript and the production Web build passed.
+Server-side revocation remains required to invalidate an already-issued token;
+clearing browser storage alone is not a server revocation.
