@@ -1,0 +1,16 @@
+{
+  "name": "rpi360-workspace",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "pnpm --filter @rpi360/web dev",
+    "build": "pnpm --filter @rpi360/web build",
+    "check": "pnpm --filter @rpi360/web check",
+    "wasm": "bash tools/release/build-wasm.sh",
+    "test": "pnpm --filter @rpi360/web test"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

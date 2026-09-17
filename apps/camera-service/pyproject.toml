@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpi360-camera"
+version = "2.0.0a1"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24", "av>=14,<18", "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "aiortc>=1.10,<2"]
+
+[project.scripts]
+rpi360-camera = "rpi360_camera.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

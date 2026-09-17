@@ -1,0 +1,7 @@
+packages:
+  - apps/web
+  - packages/web-sdk
+allowBuilds:
+  esbuild: set this to true or false
+onlyBuiltDependencies:
+  - esbuild

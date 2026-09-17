@@ -20,3 +20,15 @@ recording*.mp4
 calibration-result.json
 rig-calibration-work/
 local_data/
+.local-state/
+target/
+node_modules/
+.build/
+*.xcframework/
+apps/web/public/generated/
+packages/web-sdk/wasm/
+demos/outputs/
+playwright-report/
+test-results/
+
+*.tsbuildinfo

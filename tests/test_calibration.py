@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import cv2
 import numpy as np
-
 from rpi360 import (
     CalibrationError,
     DualCameraIntrinsics,

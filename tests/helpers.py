@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
-
 from rpi360 import CalibrationProfile, CameraCalibration
 from rpi360.common.metadata import (
     calibration_result_from_profile,

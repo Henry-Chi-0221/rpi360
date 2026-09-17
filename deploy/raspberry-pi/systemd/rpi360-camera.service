@@ -1,0 +1,18 @@
+[Unit]
+Description=RPI360 dual-fisheye camera service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/rpi360/current/.venv/bin/rpi360-camera --data-dir %h/.local/share/rpi360/data --calibration %h/.local/share/rpi360/data/calibration.json --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=%h/.local/share/rpi360/data
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "20260506_160728/cam0",
+      "sha256": "ccf64213dea03fe771aac0155f7587b05903239ec5f55b3327d74bd2d63d98a6",
+      "bytes": 91286711
+    },
+    {
+      "id": "20260506_160728/cam1",
+      "sha256": "a554dd4c4244365f855746d463f9e2766f811296c4cf3dc5150b2f9ee5f49063",
+      "bytes": 89849979
+    },
+    {
+      "id": "20260506_161921/cam0",
+      "sha256": "f6305747e294d989f2a76a09899bc5d067017053d372b9d7f7b1817bda455df0",
+      "bytes": 92944280
+    },
+    {
+      "id": "20260506_161921/cam1",
+      "sha256": "2db2a761eb77522748e3f56dbd7397834c7ed38decc0fa01971f236440949492",
+      "bytes": 87651848
+    },
+    {
+      "id": "20260506_164938/cam0",
+      "sha256": "4e69ee9b6f9126a94440b6c484ab0792db35f27df8f2d6b1fac0b1e158c24129",
+      "bytes": 101911854
+    },
+    {
+      "id": "20260506_164938/cam1",
+      "sha256": "728a7872dcdd93954e82aa6b0ab712779aa43526e019141bc0c3372f2dadb770",
+      "bytes": 110818414
+    }
+  ],
+  "source_fps_notice": "Original recordings average approximately 5.6\u20136 fps with irregular gaps.",
+  "calibration_id": "legacy-1bf1131a1a79f64e9b8e0f70bdf91ebec607153511bcf109352044fb00793360"
+}

@@ -118,7 +118,7 @@ calibration stages. Playback rejects the MP4 if the two tags disagree on K/D/R.
 Use:
 
 ```bash
-rpi360 inspect assets/samples/lake.r360.mp4
+rpi360 inspect fixtures/legacy-recordings/lake.r360.mp4
 ```
 
 `inspect` prints both the concise tag and the complete embedded calibration

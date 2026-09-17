@@ -10,7 +10,7 @@ STL files do not encode a unit. Import both files as **millimetres** and confirm
 these bounding dimensions in the slicer before printing. Do not automatically
 scale either half independently.
 
-![CAD overview](../../assets/hardware/cad-overview.png)
+![CAD overview](../photos/cad-overview.png)
 
 ## Fastener interfaces
 

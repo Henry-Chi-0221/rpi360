@@ -6,7 +6,6 @@ import argparse
 from pathlib import Path
 
 import cv2
-
 from rpi360 import Player, projection_grid
 
 

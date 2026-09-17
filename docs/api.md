@@ -1,5 +1,7 @@
 # API reference
 
+> Legacy v1 reference. For the current architecture and migration, see [v2 migration](migration/v2.md) and [validation status](validation/status.md).
+
 ## MP4
 
 ```python

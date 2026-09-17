@@ -1,6 +1,6 @@
 # Dual-fisheye camera hardware
 
-![Assembled RPI360 rig on a tripod](../assets/hardware/assembled-on-tripod.jpg)
+![Assembled RPI360 rig on a tripod](photos/assembled-on-tripod.jpg)
 
 This is the physical enclosure used to validate RPI360 on a Raspberry Pi 5.
 The lenses are held back-to-back, the Pi is contained inside the printed body,
@@ -31,7 +31,7 @@ or contact a camera PCB.
 
 ## CAD and dimensions
 
-![Enclosure CAD overview](../assets/hardware/cad-overview.png)
+![Enclosure CAD overview](photos/cad-overview.png)
 
 The two printable models are now included:
 
@@ -49,7 +49,7 @@ editing the CAD.
 
 | Dedicated power-bank fit | Open enclosure and cable routing |
 | --- | --- |
-| ![Power bank fitted in its dedicated slot](../assets/hardware/power-bank-fit.jpg) | ![Raspberry Pi, camera cable, and heat-set inserts inside the enclosure](../assets/hardware/open-enclosure.jpg) |
+| ![Power bank fitted in its dedicated slot](photos/power-bank-fit.jpg) | ![Raspberry Pi, camera cable, and heat-set inserts inside the enclosure](photos/open-enclosure.jpg) |
 
 ## Heat-set inserts and screws
 
@@ -99,9 +99,9 @@ Raspberry Pi inside the enclosure.
 
 | Camera face and enclosure screws | Enclosure mounting interface |
 | --- | --- |
-| ![Fisheye camera and four enclosure fasteners](../assets/hardware/camera-face.jpg) | ![Printed enclosure mounting interface](../assets/hardware/enclosure-mount.jpg) |
+| ![Fisheye camera and four enclosure fasteners](photos/camera-face.jpg) | ![Printed enclosure mounting interface](photos/enclosure-mount.jpg) |
 
-![Side view of the back-to-back lenses and dedicated power-bank slot](../assets/hardware/rig-side.jpg)
+![Side view of the back-to-back lenses and dedicated power-bank slot](photos/rig-side.jpg)
 
 ## Rig geometry
 

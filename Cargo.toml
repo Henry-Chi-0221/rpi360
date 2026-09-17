@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["crates/rpi360-core", "crates/rpi360-render", "crates/rpi360-ffi"]
+[workspace.package]
+version = "2.0.0-alpha.1"
+edition = "2021"
+license = "MIT"
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+glam = { version = "0.30", features = ["serde"] }
+wasm-bindgen = "=0.2.108"
