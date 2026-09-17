@@ -1,5 +1,9 @@
 # Demo gallery
 
+Watch the [inline video gallery](../README.md#demo-videos) on GitHub.
+[Hosted video URLs and source-file checksums](videos.manifest.json) identify the
+exact exported files; titles appear outside the video.
+
 These examples use the existing outdoor camera recordings. No new filming,
 watermarks, burned-in labels, or motion interpolation is involved. Every render
 uses the same Rust GPU engine exposed to applications.

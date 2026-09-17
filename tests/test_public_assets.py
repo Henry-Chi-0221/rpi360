@@ -77,7 +77,7 @@ class PublicAssetTests(unittest.TestCase):
 
         from PIL import Image
 
-        for readme in ("README.md", "README.zh-TW.md"):
+        for readme in ("README.md",):
             for target in re.findall(
                 r"\]\(([^)]+)\)", (self.root / readme).read_text()
             ):

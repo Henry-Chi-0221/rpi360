@@ -1,6 +1,7 @@
 """Dependency-free Python client for the authenticated camera API."""
 
 import json
+import time
 import uuid
 from urllib.request import Request, urlopen
 
@@ -34,6 +35,24 @@ class DeviceClient:
 
     def start_capture(self):
         return self.request("/v1/capture/start", {})
+
+    def wait_for_sync(self, timeout=15):
+        """Wait for the sensor pair to lock before recording; never infer sync."""
+        if timeout <= 0:
+            raise ValueError("timeout must be positive")
+        deadline = time.monotonic() + timeout
+        while True:
+            status = self.status()
+            if status.get("error"):
+                raise RuntimeError(status["error"])
+            if not status.get("running"):
+                raise RuntimeError("capture is stopped; call start_capture() first")
+            if status.get("sync", {}).get("locked"):
+                return status
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("camera synchronization did not lock in time")
+            time.sleep(min(0.25, remaining))
 
     def start_recording(self, request_id=None):
         return self.request(

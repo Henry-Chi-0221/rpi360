@@ -20,15 +20,24 @@ export class DeviceClient {
       },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal,
+    }).catch((error) => {
+      if (signal?.aborted || error?.name === "AbortError") throw error;
+      throw new Error(this.connectionHelp(), { cause: error });
     });
     if (!r.ok) {
       let message = await r.text();
       try {
-        message = JSON.parse(message).detail;
+        message = JSON.parse(message).detail ?? message;
       } catch {}
+      if (r.status >= 500 && !message.trim()) message = this.connectionHelp();
       throw new Error(`${r.status}: ${message}`);
     }
     return r.json();
+  }
+  private connectionHelp() {
+    return this.base === "/api"
+      ? "Cannot reach the Pi. Start the camera service on the Pi, then run make connect CAMERA=user@raspberrypi.local on this computer and keep the SSH terminal open."
+      : "Cannot reach the camera. Check its address, trusted HTTPS certificate, and that both devices are on the same local network.";
   }
   async pair(code: string) {
     const result = await this.request<{ token: string }>("/v1/pair", {

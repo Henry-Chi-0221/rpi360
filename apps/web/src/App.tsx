@@ -1150,8 +1150,22 @@ export default function App() {
                   />
                 </label>
                 <p className="hint">
-                  Leave the code empty to reconnect this tab. Development uses
-                  the local SSH tunnel through /api.
+                  On your computer, run{" "}
+                  <code>make connect CAMERA=user@raspberrypi.local</code> and
+                  keep that terminal open. Keep the address <code>/api</code>.{" "}
+                  Enter the code printed by the Pi service the first time; leave
+                  it empty to reconnect this tab.
+                </p>
+                <p className="hint">
+                  <a
+                    href="https://github.com/Henry-Chi-0221/rpi360/blob/codex/rpi360-v2/docs/getting-started/camera.md"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Camera setup and connection guide
+                  </a>{" "}
+                  · After connecting, choose{" "}
+                  <strong>Camera → Open live preview</strong>.
                 </p>
                 <button className="primary full" onClick={() => void connect()}>
                   <Link2 size={16} />

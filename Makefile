@@ -1,4 +1,4 @@
-.PHONY: setup core wasm web check test demos
+.PHONY: setup core wasm web check test demos connect
 setup:
 	uv sync --all-packages --extra dev
 	pnpm install
@@ -18,3 +18,5 @@ check: test
 	pnpm build
 demos: core
 	uv run --all-packages python tools/demos/build.py --source-root "$(SOURCE_ROOT)"
+connect:
+	bash tools/connect-camera.sh "$(CAMERA)"

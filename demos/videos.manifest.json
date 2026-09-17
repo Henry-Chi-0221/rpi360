@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "description": "README videos hosted as public GitHub attachments. All uploaded files verified byte-for-byte against these SHA-256 checksums.",
+  "videos": [
+    {
+      "id": "keyframe-reframing",
+      "url": "https://github.com/user-attachments/assets/f709c2bc-e7fb-4237-8da4-f169f05dda97",
+      "bytes": 1795752,
+      "sha256": "1ac607177a8e730c9d37f516f67a9e5071ffec65fe2f4a2611b67dc24a19c91f",
+      "recipe": "recipes/keyframe-reframing.json"
+    },
+    {
+      "id": "tiny-planet",
+      "url": "https://github.com/user-attachments/assets/2b4bc20b-4913-4749-a133-9488898ff56d",
+      "bytes": 1863243,
+      "sha256": "b092bd7391f5343f1564a76e57297297bad804d299d7e560c06464d2f7fb6eb9",
+      "recipe": "recipes/tiny-planet.json"
+    },
+    {
+      "id": "inverted-tiny-planet",
+      "url": "https://github.com/user-attachments/assets/7a57d645-c99a-44c8-a1a7-8d0fdfce2626",
+      "bytes": 1815184,
+      "sha256": "32b3c7de95cb237f0bc98d51b70913062038f6ca767d2cb03446537bc3bce1de",
+      "recipe": "recipes/inverted-tiny-planet.json"
+    },
+    {
+      "id": "barrel-roll",
+      "url": "https://github.com/user-attachments/assets/03b9fe60-a78c-4f78-9025-c796d2229995",
+      "bytes": 2404941,
+      "sha256": "cd1bcf8501a3536e4fd791795d4421ef67b96f419c7497aa797556492c0415f8",
+      "recipe": "recipes/barrel-roll.json"
+    },
+    {
+      "id": "fov-zoom",
+      "url": "https://github.com/user-attachments/assets/b1ff0342-f1fd-4d08-9dc0-e731f0ab7f68",
+      "bytes": 1424402,
+      "sha256": "8e13e0271cb25af95ed2d4598822950f7ee3eeb0f93cc566a4fb1fccd6a9460f",
+      "recipe": "recipes/fov-zoom.json"
+    },
+    {
+      "id": "time-remapping",
+      "url": "https://github.com/user-attachments/assets/252bd8d6-da3e-4b87-a75b-670cbd67740e",
+      "bytes": 2100050,
+      "sha256": "a0930625ccb34765910919d76d893b8f1bf5ee5eeb2ae9d37ea97b4de7df989e",
+      "recipe": "recipes/time-remapping.json"
+    },
+    {
+      "id": "reframe-portrait",
+      "url": "https://github.com/user-attachments/assets/5f21ac8a-098d-4ccf-8853-52e667b33566",
+      "bytes": 978677,
+      "sha256": "bae23777f39f49e98f097bca563dd8660c6f10edaab7c6f497bba42b2aea5228",
+      "recipe": "recipes/reframe-portrait.json"
+    },
+    {
+      "id": "reframe-square",
+      "url": "https://github.com/user-attachments/assets/9adf6ec5-45cd-4533-9061-ee4e778a14a1",
+      "bytes": 1119655,
+      "sha256": "47c9933fdd7a831f254b3430db0653414384d6b69a80f406036c83948ae96fb3",
+      "recipe": "recipes/reframe-square.json"
+    }
+  ]
+}

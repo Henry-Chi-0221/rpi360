@@ -6,7 +6,7 @@ calibration code remains available during the v2 transition.
 
 ```text
 rpi360/
-├── README.md / README.zh-TW.md
+├── README.md
 ├── Cargo.toml / Cargo.lock / rust-toolchain.toml
 ├── pyproject.toml / uv.lock / setup.py
 ├── package.json / pnpm-workspace.yaml / pnpm-lock.yaml
