@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rpi360.dev/schemas/project.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_us": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "keyframes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time_us": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "view": {
+            "type": "object",
+            "properties": {
+              "orientation": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "horizontal_fov_deg": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 359
+              },
+              "projection": {
+                "enum": [
+                  "perspective",
+                  "stereographic",
+                  "equirectangular"
+                ]
+              },
+              "spin_deg": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "orientation",
+              "horizontal_fov_deg",
+              "projection",
+              "spin_deg"
+            ],
+            "additionalProperties": false
+          },
+          "linear": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "time_us",
+          "view",
+          "linear"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "time_remap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "output_us": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source_us": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "output_us",
+          "source_us"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "alignment_us": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "source_id",
+    "duration_us",
+    "keyframes",
+    "time_remap",
+    "alignment_us"
+  ],
+  "additionalProperties": false
+}

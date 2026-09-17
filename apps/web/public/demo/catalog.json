@@ -1,0 +1,38 @@
+[
+  {
+    "id": "lake",
+    "title": "Still water, open sky",
+    "image": "/demo/lake.jpg",
+    "kind": "360 still-frame reframing",
+    "source": "20260506_160728",
+    "source_pts_seconds": [
+      25.142066,
+      25.031623
+    ],
+    "alignment": "unknown source clock offset; frames selected by media PTS"
+  },
+  {
+    "id": "steps",
+    "title": "A different perspective",
+    "image": "/demo/steps.jpg",
+    "kind": "360 still-frame reframing",
+    "source": "20260506_161921",
+    "source_pts_seconds": [
+      25.047623,
+      25.034582
+    ],
+    "alignment": "unknown source clock offset; frames selected by media PTS"
+  },
+  {
+    "id": "waterfront",
+    "title": "Along the waterfront",
+    "image": "/demo/waterfront.jpg",
+    "kind": "360 still-frame reframing",
+    "source": "20260506_164938",
+    "source_pts_seconds": [
+      25.236755,
+      25.079127
+    ],
+    "alignment": "unknown source clock offset; frames selected by media PTS"
+  }
+]

@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-
 from rpi360.common.types import (
     OrientationState,
     rotation_matrix_from_euler,

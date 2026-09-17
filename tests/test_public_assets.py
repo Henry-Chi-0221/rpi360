@@ -29,7 +29,7 @@ class PublicAssetTests(unittest.TestCase):
             self.assertNotIn(forbidden, payload)
 
     def test_curated_samples_are_small_valid_dual_h264_recordings(self):
-        samples = sorted((self.root / "assets/samples").glob("*.r360.mp4"))
+        samples = sorted((self.root / "fixtures/legacy-recordings").glob("*.r360.mp4"))
         self.assertEqual(
             [path.name for path in samples],
             ["lake.r360.mp4", "steps.r360.mp4", "waterfront.r360.mp4"],
@@ -56,8 +56,7 @@ class PublicAssetTests(unittest.TestCase):
             ]
             self.assertTrue(
                 all(
-                    (int(stream["width"]), int(stream["height"]))
-                    == (3280, 2464)
+                    (int(stream["width"]), int(stream["height"])) == (3280, 2464)
                     for stream in video_streams
                 )
             )
@@ -74,52 +73,28 @@ class PublicAssetTests(unittest.TestCase):
                 self.assertEqual(frame.camera0.shape, (154, 205, 3))
 
     def test_readme_assets_and_links_exist(self):
-        expected_images = (
-            "hero.webp",
-            "projection-grid.png",
-            "tiny-planet.webp",
-            "rabbit-hole.webp",
-            "perspective-orbit.webp",
-            "barrel-roll.webp",
-            "aspect-ratios.webp",
-        )
-        showcase = self.root / "assets/showcase"
-        for name in expected_images:
-            path = showcase / name
-            self.assertTrue(path.is_file(), name)
-            self.assertGreater(path.stat().st_size, 1000)
-        expected_clips = (
-            "hero.mp4",
-            "tiny-planet.mp4",
-            "rabbit-hole.mp4",
-            "perspective-orbit.mp4",
-            "barrel-roll.mp4",
-            "aspect-ratios.mp4",
-        )
-        for name in expected_clips:
-            path = showcase / name
-            self.assertTrue(path.is_file(), name)
-            streams = [
-                stream
-                for stream in probe_media(path)["streams"]
-                if stream.get("codec_type") == "video"
-            ]
-            self.assertEqual(len(streams), 1)
-            self.assertEqual(streams[0]["codec_name"], "h264")
-            self.assertEqual(
-                (int(streams[0]["width"]), int(streams[0]["height"])),
-                (1920, 1080),
-            )
-        for name in ("system_overview.jpeg", "projections.jpeg"):
-            path = self.root / "assets" / name
-            self.assertTrue(path.is_file(), name)
-            self.assertGreater(path.stat().st_size, 1000)
-        self.assertTrue(
-            (self.root / "hardware/calibration/checkerboard-9x6-a4.pdf").is_file()
-        )
+        import re
+
+        from PIL import Image
+
+        for readme in ("README.md",):
+            for target in re.findall(
+                r"\]\(([^)]+)\)", (self.root / readme).read_text()
+            ):
+                if "://" not in target and not target.startswith("#"):
+                    self.assertTrue((self.root / target.split("#")[0]).exists(), target)
+        for recipe in (self.root / "demos/recipes").glob("*.json"):
+            data = json.loads(recipe.read_text())
+            self.assertEqual(data["output"]["fps"], 30)
+            self.assertNotIn("rabbit", recipe.name)
+            with Image.open(
+                self.root / "demos/posters" / (recipe.stem + ".jpg")
+            ) as image:
+                ratio = data["output"]["width"] / data["output"]["height"]
+                self.assertAlmostEqual(image.width / image.height, ratio, places=2)
 
     def test_hardware_photos_and_printable_stls_are_valid(self):
-        hardware_assets = self.root / "assets/hardware"
+        hardware_assets = self.root / "hardware/photos"
         expected_images = (
             "assembled-on-tripod.jpg",
             "cad-overview.png",
@@ -162,7 +137,7 @@ class PublicAssetTests(unittest.TestCase):
                         maximum[axis] = max(maximum[axis], value)
             actual = tuple(
                 round(high - low, 1)
-                for low, high in zip(minimum, maximum)
+                for low, high in zip(minimum, maximum, strict=False)
             )
             self.assertEqual(actual, expected)
 

@@ -1,5 +1,7 @@
 # Raspberry Pi 5 release checklist
 
+> Legacy v1 reference. For the current architecture and migration, see [v2 migration](migration/v2.md) and [validation status](validation/status.md).
+
 Run this checklist on the assembled two-camera rig before publishing a release.
 
 ## Cameras and storage

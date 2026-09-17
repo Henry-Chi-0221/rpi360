@@ -1,5 +1,7 @@
 # Calibration principles
 
+> Legacy v1 reference. For the current architecture and migration, see [v2 migration](migration/v2.md) and [validation status](validation/status.md).
+
 RPI360 uses one `calibration-result.json` throughout the camera's life. The
 file is updated in place by two independent stages.
 

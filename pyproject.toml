@@ -1,22 +1,20 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "rpi360"
-version = "1.0.0"
+version = "2.0.0a1"
 description = "Dual-fisheye calibration, recording, and controllable 360-degree playback"
 readme = "README.md"
-requires-python = ">=3.9"
-license = {file = "LICENSE"}
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{name = "Henry Chi"}]
 keywords = ["raspberry-pi", "360-camera", "fisheye", "opencv", "picamera2"]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "License :: OSI Approved :: MIT License",
+  "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -25,6 +23,7 @@ dependencies = ["numpy>=1.21"]
 
 [project.optional-dependencies]
 desktop = ["opencv-python>=4.5"]
+camera = ["rpi360-camera>=2.0.0a1"]
 showcase = ["Pillow>=8.3"]
 dev = [
   "opencv-python>=4.5",
@@ -33,6 +32,9 @@ dev = [
   "pytest-cov>=4",
   "reportlab>=3.6",
   "ruff>=0.8",
+  "httpx>=0.27",
+  "jsonschema>=4",
+  "PyYAML>=6",
 ]
 
 [project.scripts]
@@ -44,21 +46,29 @@ Repository = "https://github.com/Henry-Chi-0221/rpi360"
 Issues = "https://github.com/Henry-Chi-0221/rpi360/issues"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"" = "packages/python/src"}
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["packages/python/src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B"]
 
 [tool.ruff.lint.per-file-ignores]
-"src/rpi360/rpi/calibration/_internals.py" = ["B904", "E501", "I001"]
+"packages/python/src/rpi360/rpi/calibration/_internals.py" = ["B904", "E501", "I001"]
+
+[tool.uv.workspace]
+members = ["apps/camera-service", "apps/media-worker"]
+
+[tool.uv.sources]
+rpi360 = { workspace = true }
+rpi360-camera = { workspace = true }
+rpi360-worker = { workspace = true }

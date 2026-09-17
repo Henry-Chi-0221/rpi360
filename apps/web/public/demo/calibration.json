@@ -1,0 +1,118 @@
+{
+  "calibration": {
+    "R_cam1_to_cam0": [
+      [
+        -0.9996922591361064,
+        0.006479408915616114,
+        -0.023945861509917867
+      ],
+      [
+        -0.004948684951435977,
+        -0.9979734105689946,
+        -0.06343959579426701
+      ],
+      [
+        -0.024308384162658007,
+        -0.06330157231374876,
+        0.9976983579228783
+      ]
+    ],
+    "camera_0": {
+      "D": [
+        0.09614503376161851,
+        -0.02344760345262156,
+        -0.005270961475660548,
+        0.0011606687356177203
+      ],
+      "K": [
+        [
+          338.00666729418026,
+          0.0,
+          875.3074301076626
+        ],
+        [
+          0.0,
+          338.0276468177591,
+          611.5789383659318
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "fisheye_fov_deg": 210.0,
+      "height": 1232,
+      "width": 1640
+    },
+    "camera_1": {
+      "D": [
+        0.09621096140439805,
+        -0.02381321616216359,
+        -0.004552549590146825,
+        0.0008252274311102563
+      ],
+      "K": [
+        [
+          336.96452736064026,
+          0.0,
+          810.8854627366925
+        ],
+        [
+          0.0,
+          336.7993669101818,
+          623.9853902116446
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "fisheye_fov_deg": 210.0,
+      "height": 1232,
+      "width": 1640
+    }
+  },
+  "calibration_state": "complete",
+  "diagnostics": {
+    "hardware": {
+      "camera_count": 2,
+      "camera_model": "Arducam B0287 Sony IMX219 wide-angle",
+      "host": "Raspberry Pi 5 8GB",
+      "note": "Valid only while the physical camera-to-camera geometry is unchanged."
+    },
+    "intrinsics": {
+      "camera_0": {
+        "accepted_sample_count": 46,
+        "coverage_ratio": 0.7057092143491382,
+        "max_reprojection_error_px": 0.9344952139985121,
+        "mean_reprojection_error_px": 0.4015402389041985,
+        "opencv_rms_px": 0.4308144076076646
+      },
+      "camera_1": {
+        "accepted_sample_count": 29,
+        "coverage_ratio": 0.6562139631329476,
+        "max_reprojection_error_px": 0.6295173006760638,
+        "mean_reprojection_error_px": 0.3427981543455286,
+        "opencv_rms_px": 0.35595583182121365
+      }
+    },
+    "rig": {
+      "captured_samples": 20,
+      "definition": "ray_cam0 = R_cam1_to_cam0 @ ray_cam1",
+      "determinant": 0.9999999999999997,
+      "feature_detector": "SIFT",
+      "inlier_count": 1425,
+      "inlier_ratio": 0.30120481927710846,
+      "maximum_inlier_error_deg": 0.34921123840999146,
+      "maximum_inlier_reprojection_error_px": 5.353957538256096,
+      "mean_inlier_error_deg": 0.19506793445730117,
+      "ransac_iterations": 20000,
+      "ransac_threshold_deg": 0.35,
+      "raw_matches": 4731,
+      "rmse_inlier_reprojection_error_px": 3.088868303022894
+    }
+  },
+  "schema_version": 1
+}

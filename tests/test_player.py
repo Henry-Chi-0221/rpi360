@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-
 from rpi360 import FrameBundle, FrameOutput, Player, PlayerState, View
+
 from tests.helpers import make_dual_track_recording, sample_calibration
 
 HAS_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None

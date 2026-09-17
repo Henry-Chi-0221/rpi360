@@ -4,7 +4,6 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-
 from rpi360 import MetadataError
 from rpi360.common.metadata import (
     calibration_from_metadata,
@@ -14,6 +13,7 @@ from rpi360.common.metadata import (
 )
 from rpi360.common.types import validate_rotation_matrix
 from rpi360.playback.mp4 import RPI360Recording
+
 from tests.helpers import make_dual_track_recording
 
 HAS_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None

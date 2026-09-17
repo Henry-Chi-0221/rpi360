@@ -1,0 +1,18 @@
+[package]
+name = "rpi360-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+[dependencies]
+rpi360-core = { path = "../rpi360-core" }
+serde_json.workspace = true
+[features]
+gpu = ["dep:rpi360-render", "dep:pollster"]
+[dependencies.rpi360-render]
+path = "../rpi360-render"
+optional = true
+[dependencies.pollster]
+version = "0.4"
+optional = true

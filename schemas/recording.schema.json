@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rpi360.dev/schemas/recording.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "state": {
+      "enum": [
+        "recording",
+        "complete",
+        "recovery_required",
+        "recovering",
+        "recovered"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "clock": {
+      "type": "object",
+      "properties": {
+        "epoch": {
+          "type": "string"
+        },
+        "origin_sensor_ns": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]+$"
+        },
+        "unit": {
+          "const": "microseconds"
+        }
+      },
+      "required": [
+        "epoch",
+        "origin_sensor_ns",
+        "unit"
+      ],
+      "additionalProperties": false
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "camera",
+          "path",
+          "width",
+          "height",
+          "codec",
+          "frames"
+        ],
+        "properties": {
+          "camera": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^camera[01]\\.mp4$"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "nominal_fps": {
+            "type": "number"
+          },
+          "codec": {
+            "const": "h264"
+          },
+          "frames": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "media_start_offset_us": {
+            "type": "integer"
+          },
+          "last_pts_us": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "metadata_frames": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "calibration": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sync": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "enum": [
+            "libcamera-software",
+            "unknown"
+          ]
+        },
+        "tolerance_us": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      },
+      "required": [
+        "method",
+        "tolerance_us"
+      ],
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]+$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "error": {
+      "type": "string"
+    },
+    "recovered_from": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "state",
+    "created_at",
+    "clock",
+    "streams",
+    "calibration",
+    "sync",
+    "files"
+  ],
+  "additionalProperties": false
+}

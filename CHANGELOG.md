@@ -1,12 +1,15 @@
 # Changelog
 
-## 1.0.0 - 2026-07-29
+## 2.0.0-alpha.1 — unreleased
 
-- Published the unified `Player.mp4()` and `Player.live()` API.
-- Added immutable access to raw cameras, per-camera equirectangular maps,
-  blended panorama, and controllable projections.
-- Added the calibration-first Raspberry Pi workflow and dual-track recording.
-- Added deterministic view effects, sample media, and reproducible showcase
-  generation.
-- Removed image-only, export, OpenCV camera fallback, and legacy simultaneous
-  rig-calibration paths.
+- Split camera capture, client rendering and optional media jobs.
+- Add sensor-clock recording bundles, authenticated device APIs and paired WebRTC preview.
+- Add Rust geometry/timeline core, shared GPU renderer, WASM and C ABI bindings.
+- Add local Web viewing, keyframes, file import, resumable downloads and H.264 export.
+- Add Swift integration, migration/recovery tools and reproducible demo recipes.
+- Replace labeled/stretched showcase assets with clean, correctly proportioned renders.
+- Preserve legacy readers and explicitly document validation limits.
+
+## 1.0.0
+
+Original Python Player, calibration tools, dual-track MP4 reader and curated samples.

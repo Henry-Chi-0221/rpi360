@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RPI360 · Minimal live API example</title>
+    <style>
+      body {
+        max-width: 960px;
+        margin: 40px auto;
+        padding: 0 24px;
+        background: #f5f7fa;
+        color: #182b3d;
+        font: 16px/1.6 system-ui;
+      }
+      canvas {
+        width: 100%;
+        background: #16212d;
+        border-radius: 16px;
+      }
+      input,
+      button {
+        padding: 10px;
+        font: inherit;
+      }
+      label {
+        display: inline-block;
+        margin: 8px 16px 8px 0;
+      }
+      output {
+        display: block;
+        min-height: 2em;
+      }
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/">← Workspace</a>
+    <h1>A live VR viewer in a few lines</h1>
+    <p>
+      This page runs the public <code>LiveViewer</code> API. Close the workspace
+      preview first: the Pi supports one viewer. An existing recording keeps
+      running.
+    </p>
+    <form id="connect">
+      <button id="start">Connect preview</button>
+      <button id="stop" type="button" disabled>Close preview</button>
+    </form>
+    <output id="status" role="status"
+      >Run make preview CAMERA=user@raspberrypi.local, then connect.</output
+    >
+    <canvas
+      id="view"
+      width="1280"
+      height="720"
+      aria-label="Live VR preview"
+    ></canvas>
+    <div id="controls">
+      <label
+        >FOV <input id="fov" type="range" min="30" max="150" value="90"
+      /></label>
+      <label
+        >Yaw <input id="yaw" type="range" min="-180" max="180" value="0"
+      /></label>
+      <label
+        >Pitch <input id="pitch" type="range" min="-90" max="90" value="0"
+      /></label>
+    </div>
+    <p>
+      View changes redraw the current frame locally. Source:
+      <code>apps/web/src/live-example.ts</code>.
+    </p>
+    <script type="module" src="/src/live-example.ts"></script>
+  </body>
+</html>

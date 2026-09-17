@@ -1,4 +1,4 @@
-"""Preview deterministic tiny-planet, rabbit-hole, orbit, and roll effects."""
+"""Preview deterministic tiny-planet, inverted-tiny-planet, orbit, and roll effects."""
 
 from __future__ import annotations
 

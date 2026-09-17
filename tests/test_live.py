@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest import mock
 
 import numpy as np
-
 from rpi360 import CaptureError, Player, UnsupportedOperationError
 from rpi360.common.metadata import (
     calibration_result_from_profile,
@@ -18,6 +17,7 @@ from rpi360.common.metadata import (
     save_calibration_result,
 )
 from rpi360.rpi.camera import CameraDevice
+
 from tests.helpers import make_dual_track_recording, sample_calibration
 
 HAS_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None

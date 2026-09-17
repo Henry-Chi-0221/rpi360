@@ -1,0 +1,464 @@
+openapi: 3.1.0
+info:
+  title: RPI360 Device API
+  version: 2.0.0-alpha.1
+  description: Default local mode requires a loopback peer and localhost Host header.
+    SSH authenticates remote users. Direct LAN mode requires HTTPS and a configured
+    bearer token. All modes enforce browser origins; /v1/info reports access_mode.
+paths:
+  /v1/info:
+    get:
+      summary: Info
+      operationId: info_v1_info_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /v1/capabilities:
+    get:
+      summary: Capabilities
+      operationId: capabilities_v1_capabilities_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/status:
+    get:
+      summary: Status
+      operationId: status_v1_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/settings:
+    get:
+      summary: Settings
+      operationId: settings_v1_settings_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+    put:
+      summary: Update Settings
+      operationId: update_settings_v1_settings_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraSettings'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/calibration:
+    get:
+      summary: Calibration
+      operationId: calibration_v1_calibration_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/capture/start:
+    post:
+      summary: Start Capture
+      operationId: start_capture_v1_capture_start_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/capture/stop:
+    post:
+      summary: Stop Capture
+      operationId: stop_capture_v1_capture_stop_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/recordings/start:
+    post:
+      summary: Start Recording
+      operationId: start_recording_v1_recordings_start_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/recordings/stop:
+    post:
+      summary: Stop Recording
+      operationId: stop_recording_v1_recordings_stop_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/recordings:
+    get:
+      summary: Recordings
+      operationId: recordings_v1_recordings_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/recordings/{recording_id}:
+    get:
+      summary: Manifest
+      operationId: manifest_v1_recordings__recording_id__get
+      parameters:
+      - name: recording_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Recording Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/recordings/{recording_id}/files/{name}:
+    get:
+      summary: Download
+      operationId: download_v1_recordings__recording_id__files__name__get
+      parameters:
+      - name: recording_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Recording Id
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/preview-sessions:
+    post:
+      summary: Preview
+      operationId: preview_v1_preview_sessions_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Offer'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/preview-sessions/{session_id}:
+    delete:
+      summary: Stop Preview
+      operationId: stop_preview_v1_preview_sessions__session_id__delete
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Session Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+  /v1/events:
+    get:
+      summary: Events
+      operationId: events_v1_events_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - {}
+      - DeviceToken: []
+      x-access-modes:
+        local: SSH/loopback
+        bearer: DeviceToken required
+components:
+  schemas:
+    CameraSettings:
+      properties:
+        revision:
+          type: integer
+          minimum: 1.0
+          title: Revision
+        auto_exposure:
+          type: boolean
+          title: Auto Exposure
+          default: true
+        exposure_us:
+          type: integer
+          maximum: 30000.0
+          minimum: 100.0
+          title: Exposure Us
+          default: 10000
+        analogue_gain:
+          type: number
+          maximum: 16.0
+          minimum: 0.1
+          title: Analogue Gain
+          default: 1
+        auto_white_balance:
+          type: boolean
+          title: Auto White Balance
+          default: true
+        colour_gains:
+          prefixItems:
+          - type: number
+            maximum: 16.0
+            minimum: 0.1
+          - type: number
+            maximum: 16.0
+            minimum: 0.1
+          type: array
+          maxItems: 2
+          minItems: 2
+          title: Colour Gains
+          default:
+          - 1
+          - 1
+      type: object
+      required:
+      - revision
+      title: CameraSettings
+    Command:
+      properties:
+        request_id:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: Request Id
+      type: object
+      required:
+      - request_id
+      title: Command
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Offer:
+      properties:
+        sdp:
+          type: string
+          maxLength: 100000
+          title: Sdp
+        type:
+          type: string
+          const: offer
+          title: Type
+      type: object
+      required:
+      - sdp
+      - type
+      title: Offer
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    DeviceToken:
+      type: http
+      scheme: bearer
+      description: Required only in explicitly configured bearer deployments. Default
+        local access uses SSH, without application credentials.

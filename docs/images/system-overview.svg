@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="550" viewBox="0 0 1120 550" role="img" aria-labelledby="title desc">
+  <title id="title">RPI360: capture on the Pi, choose the view on your device</title>
+  <desc id="desc">Two lenses feed a synchronized Pi camera service. Independent source recordings transfer as R360 bundles. Live preview packs two unstitched fisheyes into one WebRTC frame. Both paths feed the same client renderer, which applies calibration, orientation and FOV before display and export.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#527087"/></marker>
+    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#183247}.title{font-size:27px;font-weight:700}.label{font-size:20px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#426077}.eyebrow{font-size:14px;font-weight:700;letter-spacing:2px;fill:#087d77}.line{fill:none;stroke:#527087;stroke-width:2;marker-end:url(#arrow)}.card{fill:#fff;stroke:#c7d7e1;stroke-width:1.5}</style>
+  </defs>
+  <rect width="1120" height="550" rx="20" fill="#f3f7fa"/>
+  <text x="32" y="43" class="title">Capture the whole scene. Choose your view later.</text>
+  <text x="32" y="72" class="body">The live and recorded paths share the same calibration and client-side renderer.</text>
+  <rect x="24" y="99" width="532" height="384" rx="16" fill="#e8f1f5"/>
+  <rect x="580" y="99" width="516" height="384" rx="16" fill="#e3f4ef"/>
+  <text x="44" y="128" class="eyebrow">RASPBERRY PI · CAPTURE</text>
+  <text x="600" y="128" class="eyebrow">YOUR DEVICE · VIEW &amp; EDIT</text>
+  <rect x="44" y="151" width="148" height="104" rx="12" class="card"/>
+  <circle cx="85" cy="188" r="22" fill="#213e52"/><circle cx="150" cy="188" r="22" fill="#213e52"/>
+  <circle cx="85" cy="188" r="12" fill="#49b9b0"/><circle cx="150" cy="188" r="12" fill="#49b9b0"/>
+  <text x="118" y="234" text-anchor="middle" class="body">Two fisheye lenses</text>
+  <path d="M192 201H224" class="line"/>
+  <rect x="230" y="151" width="298" height="104" rx="12" class="card"/>
+  <text x="250" y="182" class="label">Synchronize &amp; encode</text>
+  <text x="250" y="210" class="body">Sensor timestamps · real timing</text>
+  <text x="250" y="234" class="small">One service owns both cameras</text>
+  <path d="M308 255V291" class="line"/><path d="M508 255V395" class="line"/>
+  <rect x="44" y="297" width="338" height="78" rx="12" class="card"/>
+  <circle cx="79" cy="327" r="16" fill="#213e52"/><circle cx="120" cy="327" r="16" fill="#213e52"/>
+  <rect x="56" y="305" width="87" height="43" rx="5" fill="none" stroke="#087d77" stroke-width="2"/>
+  <text x="159" y="326" class="label">Live preview</text>
+  <text x="159" y="353" class="small">One frame · two unstitched views</text>
+  <path d="M382 335H618" class="line"/>
+  <text x="412" y="325" class="small">WebRTC</text>
+  <rect x="44" y="400" width="484" height="62" rx="12" class="card"/>
+  <text x="63" y="426" class="label">Source recording · .r360</text>
+  <text x="63" y="448" class="small">2 MP4s + frame times + calibration + checksums</text>
+  <path d="M528 430H642V375" class="line"/>
+  <text x="548" y="455" class="small">Resumable download</text>
+  <rect x="622" y="155" width="432" height="69" rx="12" class="card"/>
+  <text x="642" y="185" class="label">Your controls</text>
+  <text x="642" y="209" class="body">Look around · FOV · keyframes · aspect ratio</text>
+  <path d="M838 224V257" class="line"/>
+  <rect x="622" y="263" width="432" height="111" rx="12" fill="#fff" stroke="#087d77" stroke-width="2"/>
+  <text x="642" y="294" class="label">Decode → calibrated GPU renderer</text>
+  <text x="642" y="322" class="body">Map viewing rays to both fisheyes</text>
+  <text x="642" y="348" class="body">Blend the overlap → render your perspective</text>
+  <path d="M836 374V394" class="line"/>
+  <rect x="704" y="400" width="350" height="62" rx="12" class="card"/>
+  <text x="724" y="426" class="label">View · save an edit · export MP4</text>
+  <text x="724" y="448" class="small">Original footage remains unchanged</text>
+  <text x="32" y="520" class="body">Changing FOV or orientation never sends a new viewpoint to the Pi. It redraws the current image locally.</text>
+</svg>

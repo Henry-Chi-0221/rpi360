@@ -1,0 +1,14 @@
+{
+  "name": "@rpi360/web-sdk",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./wasm": "./wasm/rpi360_render.js"
+  },
+  "dependencies": {
+    "hash-wasm": "^4.12.0",
+    "mediabunny": "^1.40.0"
+  }
+}

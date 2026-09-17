@@ -1,0 +1,191 @@
+{
+  "schema_version": 2,
+  "title": "Reframe Portrait",
+  "source_notice": "360 still-frame reframing. Captured image pair selected by original PTS; source clock offset unknown.",
+  "sources": [
+    {
+      "path": "20260506_160728/cam0.mp4",
+      "track": 0
+    },
+    {
+      "path": "20260506_160728/cam1.mp4",
+      "track": 0
+    }
+  ],
+  "calibration": {
+    "schema_version": 2,
+    "id": "legacy-1bf1131a1a79f64e9b8e0f70bdf91ebec607153511bcf109352044fb00793360",
+    "coordinate_system": "right-up-back",
+    "cameras": [
+      {
+        "size": [
+          1640,
+          1232
+        ],
+        "intrinsics": [
+          338.00665,
+          338.02765,
+          875.30743,
+          611.5789
+        ],
+        "skew": 0.0,
+        "distortion": [
+          0.096145034,
+          -0.023447603,
+          -0.0052709617,
+          0.0011606688
+        ],
+        "fov_deg": 210.0,
+        "camera_to_rig": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "gain": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "size": [
+          1640,
+          1232
+        ],
+        "intrinsics": [
+          336.96454,
+          336.79938,
+          810.88544,
+          623.9854
+        ],
+        "skew": 0.0,
+        "distortion": [
+          0.096210964,
+          -0.023813216,
+          -0.0045525497,
+          0.0008252274
+        ],
+        "fov_deg": 210.0,
+        "camera_to_rig": [
+          [
+            -0.99969226,
+            -0.006479409,
+            0.023945862
+          ],
+          [
+            0.004948685,
+            -0.9979734,
+            -0.06343959
+          ],
+          [
+            0.024308383,
+            -0.06330157,
+            0.99769837
+          ]
+        ],
+        "gain": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    ]
+  },
+  "project": {
+    "schema_version": 2,
+    "id": "reframe-portrait",
+    "source_id": "20260506_160728",
+    "duration_us": 8000000,
+    "keyframes": [
+      {
+        "time_us": 0,
+        "view": {
+          "orientation": [
+            0.0,
+            0.08715574274765817,
+            -0.0,
+            0.9961946980917455
+          ],
+          "horizontal_fov_deg": 65,
+          "projection": "perspective",
+          "spin_deg": 0
+        },
+        "linear": false
+      },
+      {
+        "time_us": 1200000,
+        "view": {
+          "orientation": [
+            0.0,
+            0.08715574274765817,
+            -0.0,
+            0.9961946980917455
+          ],
+          "horizontal_fov_deg": 65,
+          "projection": "perspective",
+          "spin_deg": 0
+        },
+        "linear": false
+      },
+      {
+        "time_us": 6800000,
+        "view": {
+          "orientation": [
+            0.017385994761764084,
+            -0.08714246850588939,
+            0.0015210774457754552,
+            0.9960429728140489
+          ],
+          "horizontal_fov_deg": 72,
+          "projection": "perspective",
+          "spin_deg": 0
+        },
+        "linear": false
+      },
+      {
+        "time_us": 8000000,
+        "view": {
+          "orientation": [
+            0.017385994761764084,
+            -0.08714246850588939,
+            0.0015210774457754552,
+            0.9960429728140489
+          ],
+          "horizontal_fov_deg": 72,
+          "projection": "perspective",
+          "spin_deg": 0
+        },
+        "linear": false
+      }
+    ],
+    "time_remap": [
+      {
+        "output_us": 0,
+        "source_us": 23000000
+      },
+      {
+        "output_us": 8000000,
+        "source_us": 31000000
+      }
+    ],
+    "alignment_us": null
+  },
+  "output": {
+    "width": 720,
+    "height": 1280,
+    "fps": 30
+  },
+  "freeze_source_us": 25000000
+}

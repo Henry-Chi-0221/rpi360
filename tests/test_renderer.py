@@ -2,7 +2,6 @@ import unittest
 from unittest import mock
 
 import numpy as np
-
 from rpi360.common.rendering import (
     RenderSession,
     blend_equirectangular_mapper,
@@ -21,6 +20,7 @@ from rpi360.common.types import (
     ViewConfig,
     rotation_matrix_from_euler,
 )
+
 from tests.helpers import sample_calibration
 
 

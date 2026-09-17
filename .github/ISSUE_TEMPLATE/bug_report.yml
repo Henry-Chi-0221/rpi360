@@ -1,0 +1,27 @@
+name: Bug report
+description: Report a reproducible camera, renderer, or workbench failure.
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Versions and environment
+      description: Commit/release, OS, browser, hardware, sensor mode, and network conditions.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Sanitized error messages and validation reports. Do not upload tokens, pairing codes, or private footage.

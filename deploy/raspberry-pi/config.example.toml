@@ -1,0 +1,9 @@
+# Deployment settings (reference for CLI flags; TOML is not auto-loaded).
+data_dir = "/home/USER/.local/share/rpi360/data"
+host = "127.0.0.1"
+port = 8765
+# For LAN deployment set host = "0.0.0.0" and provide a trusted certificate/key and --api-token-file.
+# cert = "/path/to/camera-cert.pem"
+# key = "/path/to/camera-key.pem"
+# web_root = "/path/to/apps/web/dist"
+# Never store an API token in this file or in Git.
