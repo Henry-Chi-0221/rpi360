@@ -112,12 +112,14 @@ pnpm install
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.108 --locked
 pnpm wasm
-pnpm dev
+make preview
 ```
 
 Open **http://localhost:5173**. Choose an included scene, drag to look around,
 scroll to change FOV, add keyframes, then **Export video**. The included scenes
 are 360 still-frame samples; import a recording to edit moving footage.
+On macOS, `make preview` installs a background workbench; the terminal can close.
+On other platforms, use `pnpm dev` for camera-free editing and keep it running.
 No camera, Python server or cloud account is needed.
 
 ## Connect your Pi for live preview
@@ -133,10 +135,23 @@ cd /path/to/rpi360
 make preview CAMERA=your_username@raspberrypi.local
 ```
 
-Replace the destination with your normal Pi SSH login. The command starts or
-reuses the SSH tunnel and workbench. Enter your **SSH password** if prompted;
-there is **no application account, pairing code or browser credential**.
-Keep this terminal open while using the camera.
+Replace the destination with your normal Pi SSH login. On **macOS**, this builds
+and installs two background services: the workbench and an SSH tunnel. The first
+run may ask for your **SSH password** to install a dedicated forwarding key;
+the password is not saved. There is **no pairing code or browser credential**.
+
+Once the command reports ready, **you can close the terminal**. Both services
+start at Mac login and restart after crashes. A disconnected Pi does not take
+the workbench offline; local editing remains available. Check or stop with:
+
+```sh
+make preview-status
+make preview-stop
+```
+
+Run `make preview` again to start/update using the saved camera address. If a
+foreground `pnpm dev` is using port 5173, stop it first. Other platforms currently
+use the foreground launcher and must keep its terminal open.
 
 Open **http://localhost:5173 → Camera → Open live preview**. The workspace
 connects automatically. Wait for **LIVE · Synced**, then drag the image or adjust

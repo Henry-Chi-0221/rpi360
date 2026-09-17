@@ -1,4 +1,4 @@
-.PHONY: setup core wasm web check test demos connect preview camera
+.PHONY: setup core wasm web check test demos connect preview preview-status preview-stop camera
 setup:
 	uv sync --all-packages --extra dev
 	pnpm install
@@ -22,5 +22,9 @@ connect:
 	bash tools/connect-camera.sh "$(CAMERA)"
 preview:
 	node tools/preview.mjs "$(CAMERA)"
+preview-status:
+	node tools/preview.mjs status
+preview-stop:
+	node tools/preview.mjs stop
 camera:
 	bash tools/run-camera.sh "$(CALIBRATION)"

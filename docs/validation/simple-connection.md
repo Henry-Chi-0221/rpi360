@@ -1,5 +1,8 @@
 # SSH connection without pairing — 2026-09-17
 
+The foreground launcher checks below are historical;
+[background-service validation](persistent-preview.md) supersedes its lifetime behavior.
+
 This replaces the earlier alpha pairing flow. It is a focused connection and
 access-policy validation, not an endurance or release certification run.
 

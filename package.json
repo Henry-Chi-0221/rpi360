@@ -8,7 +8,7 @@
     "build": "pnpm --filter @rpi360/web build",
     "check": "pnpm --filter @rpi360/web check",
     "wasm": "bash tools/release/build-wasm.sh",
-    "test": "pnpm --filter @rpi360/web test"
+    "test": "pnpm --filter @rpi360/web test && node --test tests/integration/workbench-server.test.mjs"
   },
   "devDependencies": {
     "prettier": "3.6.2"

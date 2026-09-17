@@ -43,12 +43,39 @@ cd /path/to/rpi360
 make preview CAMERA=your_username@raspberrypi.local
 ```
 
-Use the SSH destination that works for your Pi: hostname, `.local` name or LAN
-IP. Enter your normal SSH password if prompted; an SSH key also works.
-The command starts both the tunnel and workbench and prints the browser URL.
-Leave it running. Ctrl+C stops only the local processes it started; it does not
-stop a Pi recording. Existing working services are reused and left untouched.
-Reusing a tunnel does not change its destination; close it first to switch Pis.
+On macOS, this builds the workbench and installs two independent LaunchAgents:
+`io.rpi360.workbench` and `io.rpi360.camera-tunnel`. Stop an existing foreground
+`pnpm dev` / `make connect` first; unrelated listeners are never terminated.
+
+Use the SSH destination that works for your Pi. The first run asks for your
+normal SSH login to add a dedicated Ed25519 forwarding key, then returns when
+ready. **You can close the terminal.** Neither your password nor a browser token
+is stored. Subsequent starts use the saved camera address:
+
+```sh
+make preview          # start/update both services
+make preview-status   # separate workbench and camera health, PIDs and log path
+make preview-stop     # stop services and remove automatic login startup
+```
+
+The services start at Mac login and restart after unexpected exits. SSH checks
+the existing host key and retries after network failure. The workbench is a
+built snapshot in `~/Library/Application Support/RPI360/releases/`; it does not
+need this checkout or a development terminal at runtime. Rebuilding does not
+replace files underneath the running server. Failed update readiness restores the
+previous service and checks its health before reporting the failure. Log files are under
+`~/Library/Logs/RPI360/`. Keep Node.js installed at its configured location.
+
+The Pi may be offline when the workbench opens. Local editing remains available,
+and the browser retries connecting every five seconds. Video still requires a
+running, calibrated Pi on the LAN. An interrupted video session can be reopened
+with **Close live preview → Open live preview** after connectivity returns.
+Mac logout, sleep and shutdown necessarily interrupt local availability; login
+startup is configured, while actual reboot/sleep tests are not release-certified.
+
+On other platforms, or with `node tools/preview.mjs --foreground user@raspberrypi.local`,
+the launcher stays in the foreground. Keep that terminal open. macOS background
+service management is the tested persistent path in this alpha.
 
 Open **http://localhost:5173 → Camera → Open live preview**. The camera connects
 automatically. Wait for **LIVE · Synced**, then drag to look around or adjust FOV,
@@ -61,6 +88,7 @@ preview or browser does not stop recording. Download a finished recording from
 the Camera panel to edit locally. Only one live video viewer is supported, but
 any connected tab or SDK can access controls and recordings.
 
+For development, first run `make preview-stop` to free the fixed ports.
 For separate terminal management, `make connect CAMERA=...` starts only SSH;
 `pnpm dev` starts only the workbench. Both commands run from the repository root.
 
@@ -78,13 +106,30 @@ The second verifies the complete browser proxy path without credentials.
 | --- | --- |
 | `No rule to make target preview` | Enter the rpi360 checkout first; update it if it predates this command. |
 | Update the Pi camera service / old `401` | Update **both** checkouts, install and start the new Pi release, then reload the workbench. Old browser credentials are no longer used. |
-| API unavailable | Start `make camera` on the Pi and check your SSH destination. |
-| Port 8765 occupied, API unavailable | Inspect `lsof -nP -iTCP:8765 -sTCP:LISTEN` and the Pi service. The helper never kills an unknown process. |
-| Workbench port 5173 occupied | Reuse the workbench at that URL, or close an unrelated/outdated server first. |
+| API unavailable, page still opens | Check `make preview-status`, Pi service and LAN. The SSH service retries independently. |
+| Page unavailable | Run `make preview-status`; inspect the workbench log. Run `make preview` to reinstall/start the selected build. |
+| Port 8765 occupied, API unavailable | Use `make preview-status` first; inspect `lsof -nP -iTCP:8765 -sTCP:LISTEN` if an unrelated tunnel occupies it. The helper never kills an unknown process. |
+| Workbench port 5173 occupied | A managed workbench is reused. Close an unrelated/outdated development server before installing the managed service. |
 | `409` preview capacity | Close the other preview. There is one video viewer; there is no controller pairing limit. |
 | Connected, no video | Permit LAN UDP and disable guest/client isolation on your network. SSH transports API traffic, not video. |
 | Origin not allowed | Use `http://localhost:5173` or `http://127.0.0.1:5173`; custom origins require explicit `--origin` on the Pi. |
 | Calibration missing | Start with `CALIBRATION=/path/to/your/profile.json`. VR preview needs a valid rig profile. |
+
+## Automatic SSH connection and removal
+
+The dedicated private key is stored under
+`~/Library/Application Support/RPI360/ssh/` with permissions 0600. The public
+key entry on the Pi uses OpenSSH `restrict`, a forced `/bin/false` command,
+`permitopen` and `permitlisten` for `127.0.0.1:8765`. Shell, agent forwarding,
+PTY and X11 access are disabled; TCP forwarding is constrained to that Pi port.
+See the [OpenSSH authorized-key options](https://man.openbsd.org/sshd.8#AUTHORIZED_KEYS_FILE_FORMAT).
+
+If the Pi account is reinstalled or the key entry is removed, reauthorize with
+`node tools/preview.mjs authorize user@raspberrypi.local` using the normal SSH
+login. Never disable host-key checking to repair a changed host identity.
+To revoke access, remove the matching `rpi360-api-forwarding` public-key entry
+from the Pi's `~/.ssh/authorized_keys`. `make preview-stop` stops local services
+but preserves keys, recordings and settings; it is not server-side revocation.
 
 ## Optional direct HTTPS deployment
 

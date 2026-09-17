@@ -5,8 +5,8 @@ The examples use the same camera API and renderer as the workbench.
 
 ## Live VR in TypeScript
 
-Build the workspace with `pnpm install && pnpm wasm`, start `pnpm dev`, and
-follow the [camera connection guide](camera.md). The runnable example is at
+Build the workspace with `pnpm install && pnpm wasm`, run
+`make preview CAMERA=user@raspberrypi.local`, and follow the [camera connection guide](camera.md). The runnable example is at
 <http://localhost:5173/api-example.html>; its source is
 [live-example.ts](../../apps/web/src/live-example.ts).
 Close the workbench's preview first. Only one viewer is supported at a time.
@@ -38,7 +38,7 @@ an editor or custom player. `DeviceClient.request()` exposes the full
 ## Record with Python
 
 From the repository root, run `uv sync` and use `uv run python`.
-Keep the SSH tunnel open. The following example is also available as
+Keep the background preview service running. The following example is also available as
 `uv run python examples/python/record_clip.py`.
 
 ```python

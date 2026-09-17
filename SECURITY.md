@@ -10,6 +10,12 @@ peer and a localhost/loopback Host header. It does not trust forwarded peer
 headers. Browser origins are checked. Users and programs with access to the
 camera host or forwarded local port can control recording and download media;
 use a trusted local computer. There is no pairing code or browser credential.
+
+On macOS, persistent preview adds a dedicated SSH key scoped to Pi loopback port
+8765 with a forced failing command and restricted SSH options. The private key
+is stored with mode 0600 under the user's RPI360 application data. Passwords are
+not stored. Revoke the public key on the Pi to remove this machine's access;
+stopping local LaunchAgents alone does not revoke it.
 Do not expose or reverse-proxy this local mode on an external interface.
 
 Direct LAN deployments require trusted HTTPS plus an operator-managed bearer

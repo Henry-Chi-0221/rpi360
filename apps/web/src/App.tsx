@@ -260,6 +260,7 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
+    if (device) return;
     const controller = new AbortController();
     for (const name of ["localStorage", "sessionStorage"] as const) {
       try {
@@ -269,20 +270,23 @@ export default function App() {
           if (key?.startsWith("rpi360-token:")) storage.removeItem(key);
         }
       } catch {
-        /* An unavailable storage area cannot be migrated. */
+        /* Storage is optional. */
       }
     }
     const client = new DeviceClient(
       import.meta.env.DEV ? "/api" : location.origin,
     );
-    void client
-      .request<{ access_mode: string }>(
-        "/v1/info",
-        undefined,
-        undefined,
-        controller.signal,
-      )
-      .then(async (info) => {
+    let busy = false;
+    const probe = async () => {
+      if (busy || controller.signal.aborted) return;
+      busy = true;
+      try {
+        const info = await client.request<{ access_mode: string }>(
+          "/v1/info",
+          undefined,
+          undefined,
+          controller.signal,
+        );
         if (info.access_mode !== "local") return;
         await client.request(
           "/v1/capabilities",
@@ -290,25 +294,29 @@ export default function App() {
           undefined,
           controller.signal,
         );
+        const recordings = await client.request(
+          "/v1/recordings",
+          undefined,
+          undefined,
+          controller.signal,
+        );
         if (!controller.signal.aborted) {
+          setRemote(recordings.items);
           setDevice(client);
-          setRemote(
-            (
-              await client.request(
-                "/v1/recordings",
-                undefined,
-                undefined,
-                controller.signal,
-              )
-            ).items,
-          );
         }
-      })
-      .catch(() => {
-        /* Camera-free editing remains available. */
-      });
-    return () => controller.abort();
-  }, []);
+      } catch {
+        /* Retry quietly while camera-free editing stays available. */
+      } finally {
+        busy = false;
+      }
+    };
+    void probe();
+    const timer = setInterval(probe, 5000);
+    return () => {
+      clearInterval(timer);
+      controller.abort();
+    };
+  }, [device]);
   useEffect(() => {
     if (renderer.current)
       try {
@@ -1214,7 +1222,8 @@ export default function App() {
                 <p className="hint">
                   For the default workflow, run{" "}
                   <code>make preview CAMERA=user@raspberrypi.local</code> from
-                  your checkout. Keep the address <code>/api</code>.
+                  your checkout. Keep the default device address. On macOS, the
+                  services keep running after the terminal closes.
                 </p>
                 <p className="hint">
                   <a
