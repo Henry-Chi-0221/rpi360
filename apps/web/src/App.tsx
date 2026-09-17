@@ -364,6 +364,8 @@ export default function App() {
         const s = await device.request("/v1/status");
         if (!stopped) {
           setStatus(s);
+          if (disconnected)
+            setMessage("Camera reconnected · preview controls are available");
           disconnected = false;
         }
       } catch (e) {

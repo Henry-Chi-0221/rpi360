@@ -25,7 +25,7 @@ recordings were preserved. This change did not restart the Pi camera service.
 | Workbench process failure | Sent SIGKILL to the observed managed PID 45670. launchd started PID 46049; `/healthz` recovered in approximately 0.29 seconds. |
 | SSH process failure | Sent SIGKILL to managed PID 45950. launchd started PID 46053; proxied Pi `/v1/info` recovered in approximately 0.32 seconds. Workbench health stayed HTTP 200 throughout polling. |
 | Longer camera outage | Unloaded the tunnel job. `/api/v1/info` returned 502 while `/healthz` and the page stayed available. Reloaded Chrome during the outage; sample viewing remained available. |
-| Reconnection | Reloaded the tunnel job. The existing browser tab changed to Camera connected without manual reconnect or credential entry, then opened real Pi video showing `LIVE · Synced`. |
+| Reconnection | Reloaded the tunnel job. The existing browser tab changed to Camera connected without manual reconnect or credential entry, then opened real Pi video showing `LIVE · Synced`. A subsequent outage/recovery also verified that the stale disconnected message changes to Camera reconnected. |
 | Version switch / failed update | An update exposed launchd’s asynchronous unload; the installer now waits for job removal before bootstrap. A new real build then activated successfully. An injected server that exits 42 failed readiness, restored the previous job, waited for HTTP 200, and preserved the current release pointer. |
 | Repeated start | Rebuilt the identical snapshot and reused the jobs, without a new password or duplicate listeners. |
 | Key restrictions | A remote `true` command returned 1 under the forced command. Forwarding to Pi port 22 and creating an external remote listener were rejected by sshd. |
